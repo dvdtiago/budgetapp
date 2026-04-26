@@ -5,18 +5,56 @@
 
 ---
 
-## v1.1 — Goals + Deadline Visibility
+## v1.1 — Goals + Deadline Visibility ✓
 > Focus: native goal tracking and surfacing payment deadlines on the dashboard.
 
-- [ ] New `Goal` model: `name, targetAmount, currentAmount, deadline, type (savings|debtFree|purchase)`
-- [ ] Goals page: create, edit, delete goals; manual progress updates
-- [ ] Dashboard goal progress cards with timeline projection ("on track by X")
-- [ ] Surplus allocation: option to split surplus between Avalanche and goals
-- [ ] Dashboard widget: upcoming debt payment deadlines (next 30 days)
+- [x] New `Goal` model: `name, targetAmount, currentAmount, deadline, type (savings|debtFree|purchase)`
+- [x] Goals page: create, edit, delete goals; manual progress updates
+- [x] Dashboard goal progress cards with timeline projection ("on track by X")
+- [x] Surplus allocation: option to split surplus between Avalanche and goals
+- [x] Dashboard widget: upcoming debt payment deadlines (next 30 days)
 
 ---
 
-## v1.2 — Statement Parser (Manual Upload)
+## v1.2 — UX Fixes & Polish
+> Focus: quick wins across Debt, Budget, and Transactions pages.
+
+- [ ] Debt: fix header color in dark mode
+- [ ] Debt: helper text on Current Balance / Original Balance fields based on selected debt type
+- [ ] Debt: relabel "Monthly Payment" → "Minimum Payment" when Credit Card type is selected
+- [ ] Debt: per-debt clear date (sits alongside global goal date; used for personal prioritization)
+- [ ] Budget: display overhaul — show figures as "₱0.00 / ₱5,000.00 spent" below the bar; make amounts prominent
+- [ ] Budget: edit category expands the active card in-place instead of rendering UI above the list
+- [ ] Budget: drag-to-reorder categories; order persists to DB via `sortOrder` field on `BudgetCategory`
+
+---
+
+## v1.3 — Transactions 2.0 & Revolving Credit
+> Focus: link transactions to payment sources; make credit card balances dynamic.
+> ⚠ Data model change: credit card `currentBalance` becomes computed from transactions + payments, not manually entered.
+
+- [ ] Add `paymentMethod` enum to Transaction: `BUDGET | CREDIT_CARD | UNBUDGETED`
+- [ ] Add nullable `debtId` FK to Transaction (populated when `CREDIT_CARD` is selected)
+- [ ] Transactions page: inline editing of existing transactions (amount, date, description, payment method)
+- [ ] Transactions page: payment method selector when logging — choose credit card, budget category, or unbudgeted
+- [ ] Credit card balance auto-updates from tagged transactions (charges accumulate; payments reduce balance; rolls over monthly)
+- [ ] Budget rollover: unspent monthly allocation carries forward to next month (tracked via `BudgetRollover` model or computed from history)
+- [ ] Dashboard: last 2 transactions shown with payment method tag
+
+---
+
+## v1.4 — Onboarding & Help System
+> Focus: first-run experience and in-app guidance for new users.
+
+- [ ] Onboarding flow: step-by-step setup wizard on first login (add income → add debts → set goal date → add budget categories)
+- [ ] Tooltips on key UI elements (surplus calculation, Avalanche method, goal date, minimum payment)
+- [ ] Helper text in forms where context is non-obvious
+- [ ] Empty state improvements across all pages (more descriptive CTAs)
+- [ ] "How it works" summary card on Dashboard for new users (dismissible)
+
+---
+
+## v1.5 — Statement Parser (Manual Upload)
 > Focus: reduce manual balance updates by parsing credit card statements.
 
 - [ ] Manual PDF upload endpoint (`POST /api/statements/upload`)
@@ -27,18 +65,18 @@
 
 ---
 
-## v1.3 — Gmail Integration (Auto-Fetch Statements)
+## v1.6 — Gmail Integration (Auto-Fetch Statements)
 > Focus: zero-touch statement ingestion via Gmail OAuth.
 
 - [ ] Gmail OAuth2 flow (read-only scope); token storage in DB per user
 - [ ] Background job: scan inbox for new statements by issuer sender patterns
-- [ ] Reuse v1.2 parser pipeline on fetched PDF attachments
+- [ ] Reuse v1.5 parser pipeline on fetched PDF attachments
 - [ ] User-configurable: enable/disable per debt, map sender → debt
 - [ ] Settings page: Gmail connection status + disconnect option
 
 ---
 
-## v1.4 — Google Calendar Integration
+## v1.7 — Google Calendar Integration
 > Focus: write payment deadlines to Google Calendar; unify reminders.
 
 - [ ] Google Calendar OAuth2 flow (read+write scope)

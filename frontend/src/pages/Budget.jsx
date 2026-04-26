@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, Pencil, Check, X } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, GripVertical } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import api from '../lib/api.js';
 import { formatPHP, formatDate } from '../lib/utils.js';
@@ -78,12 +78,14 @@ export default function Budget() {
   const [loading, setLoading] = useState(true);
   const [showAddTx, setShowAddTx] = useState(false);
   const [editingTx, setEditingTx] = useState(null);
-  const [editCat, setEditCat] = useState(null);
+  const [editCatId, setEditCatId] = useState(null);
   const [showAddCat, setShowAddCat] = useState(false);
   const [payingDebtId, setPayingDebtId] = useState(null);
   const [txForm, setTxForm] = useState({ categoryId: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) });
   const [catForm, setCatForm] = useState({ name: '', monthlyAllocation: '', icon: '', color: '#6366f1' });
   const [debtPayForm, setDebtPayForm] = useState({ amount: '', date: new Date().toISOString().slice(0, 10), notes: '' });
+  const dragItem = useRef(null);
+  const dragOver = useRef(null);
 
   async function load() {
     setLoading(true);
@@ -134,15 +136,49 @@ export default function Budget() {
 
   async function saveCategory(e) {
     e.preventDefault();
-    if (editCat) {
-      await api.put(`/budget/categories/${editCat.id}`, catForm);
-      setEditCat(null);
+    if (editCatId) {
+      await api.put(`/budget/categories/${editCatId}`, catForm);
+      setEditCatId(null);
     } else {
       await api.post('/budget/categories', catForm);
       setShowAddCat(false);
     }
     setCatForm({ name: '', monthlyAllocation: '', icon: '', color: '#6366f1' });
     load();
+  }
+
+  function startEdit(cat) {
+    setEditCatId(cat.id);
+    setCatForm({ name: cat.name, monthlyAllocation: cat.monthlyAllocation, icon: cat.icon || '', color: cat.color || '#6366f1' });
+  }
+
+  function cancelEdit() {
+    setEditCatId(null);
+    setCatForm({ name: '', monthlyAllocation: '', icon: '', color: '#6366f1' });
+  }
+
+  function onDragStart(index) {
+    dragItem.current = index;
+  }
+
+  function onDragEnter(index) {
+    dragOver.current = index;
+    if (dragItem.current === index) return;
+    setCategories(prev => {
+      const next = [...prev];
+      const dragged = next.splice(dragItem.current, 1)[0];
+      next.splice(index, 0, dragged);
+      dragItem.current = index;
+      return next;
+    });
+  }
+
+  async function onDragEnd() {
+    dragItem.current = null;
+    dragOver.current = null;
+    await api.put('/budget/categories/reorder', {
+      order: categories.map((c, i) => ({ id: c.id, sortOrder: i })),
+    });
   }
 
   async function deleteCategory(id) {
@@ -157,11 +193,6 @@ export default function Budget() {
     setDebtPayForm({ amount: '', date: new Date().toISOString().slice(0, 10), notes: '' });
     setPayingDebtId(null);
     load();
-  }
-
-  function startEdit(cat) {
-    setEditCat(cat);
-    setCatForm({ name: cat.name, monthlyAllocation: cat.monthlyAllocation, icon: cat.icon || '', color: cat.color || '#6366f1' });
   }
 
   const spendingByCat = categories.map(cat => ({
@@ -334,14 +365,16 @@ export default function Budget() {
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Expense Categories</h2>
-          <button onClick={() => { setShowAddCat(s => !s); setEditCat(null); }} className="btn-secondary text-xs">
-            <Plus size={13} /> Add category
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => { setShowAddCat(s => !s); setEditCatId(null); }} className="btn-secondary text-xs">
+              <Plus size={13} /> Add category
+            </button>
+          </div>
         </div>
 
-        {(showAddCat || editCat) && (
+        {showAddCat && (
           <div className="card mb-3">
-            <h3 className="font-medium text-neutral-800 dark:text-neutral-100 mb-3">{editCat ? 'Edit category' : 'New category'}</h3>
+            <h3 className="font-medium text-neutral-800 dark:text-neutral-100 mb-3">New category</h3>
             <form onSubmit={saveCategory} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -364,7 +397,7 @@ export default function Budget() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button type="button" onClick={() => { setShowAddCat(false); setEditCat(null); }} className="btn-secondary flex-1">Cancel</button>
+                <button type="button" onClick={() => setShowAddCat(false)} className="btn-secondary flex-1">Cancel</button>
                 <button type="submit" className="btn-primary flex-1">Save</button>
               </div>
             </form>
@@ -372,31 +405,81 @@ export default function Budget() {
         )}
 
         <div className="space-y-3">
-          {spendingByCat.map(cat => (
-            <div key={cat.id} className="card">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-xl">{cat.icon || '📦'}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-neutral-800 dark:text-neutral-100">{cat.name}</span>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => startEdit(cat)} className="p-1 rounded text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                        <Pencil size={13} />
-                      </button>
-                      <button onClick={() => deleteCategory(cat.id)} className="p-1 rounded text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-                        <Trash2 size={13} />
-                      </button>
+          {spendingByCat.map((cat, index) => {
+            const isEditing = editCatId === cat.id;
+            const over = cat.spent > Number(cat.monthlyAllocation) && Number(cat.monthlyAllocation) > 0;
+            return (
+              <div
+                key={cat.id}
+                className="card"
+                draggable
+                onDragStart={() => onDragStart(index)}
+                onDragEnter={() => onDragEnter(index)}
+                onDragEnd={onDragEnd}
+                onDragOver={e => e.preventDefault()}
+              >
+                {/* Default view */}
+                {!isEditing && (
+                  <>
+                    <div className="flex items-center gap-2 mb-3">
+                      <GripVertical size={15} className="text-neutral-300 dark:text-neutral-600 cursor-grab shrink-0" />
+                      <span className="text-xl shrink-0">{cat.icon || '📦'}</span>
+                      <span className="font-semibold text-neutral-800 dark:text-neutral-100 flex-1 truncate">{cat.name}</span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => startEdit(cat)} className="p-1 rounded text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => deleteCategory(cat.id)} className="p-1 rounded text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
-                    <span>{formatPHP(cat.spent)} spent</span>
-                    <span>of {formatPHP(cat.monthlyAllocation)}</span>
-                  </div>
-                </div>
+                    <ProgressBar value={cat.spent} max={Number(cat.monthlyAllocation)} />
+                    <div className="flex justify-end mt-2">
+                      <span className={`text-sm font-semibold ${over ? 'text-red-500' : 'text-neutral-700 dark:text-neutral-200'}`}>
+                        {formatPHP(cat.spent)}
+                        <span className="text-neutral-400 dark:text-neutral-500 font-normal"> / {formatPHP(cat.monthlyAllocation)} spent</span>
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {/* Expanded edit form */}
+                {isEditing && (
+                  <form onSubmit={saveCategory} className="space-y-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-medium text-neutral-800 dark:text-neutral-100 text-sm">Edit — {cat.name}</h3>
+                      <button type="button" onClick={cancelEdit} className="p-1 rounded text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700"><X size={14} /></button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="label">Name</label>
+                        <input className="input" value={catForm.name} onChange={e => setCatForm(f => ({ ...f, name: e.target.value }))} required />
+                      </div>
+                      <div>
+                        <label className="label">Monthly budget (₱)</label>
+                        <input className="input" type="number" min="0" step="0.01" value={catForm.monthlyAllocation} onChange={e => setCatForm(f => ({ ...f, monthlyAllocation: e.target.value }))} required />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="label">Icon (emoji)</label>
+                        <input className="input" value={catForm.icon} onChange={e => setCatForm(f => ({ ...f, icon: e.target.value }))} placeholder="🛒" maxLength={2} />
+                      </div>
+                      <div>
+                        <label className="label">Color</label>
+                        <input className="input" type="color" value={catForm.color} onChange={e => setCatForm(f => ({ ...f, color: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={cancelEdit} className="btn-secondary flex-1">Cancel</button>
+                      <button type="submit" className="btn-primary flex-1">Save</button>
+                    </div>
+                  </form>
+                )}
               </div>
-              <ProgressBar value={cat.spent} max={Number(cat.monthlyAllocation)} />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

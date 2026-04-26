@@ -52,7 +52,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { name, provider, type, status, currentBalance, originalBalance, interestRate, minPayment, plannedStartDate } = req.body;
+    const { name, provider, type, status, currentBalance, originalBalance, interestRate, minPayment, plannedStartDate, clearDate } = req.body;
 
     const debt = await prisma.debt.create({
       data: {
@@ -66,6 +66,7 @@ router.post('/', async (req, res) => {
         interestRate,
         minPayment,
         plannedStartDate: plannedStartDate ? new Date(plannedStartDate) : null,
+        clearDate: clearDate ? new Date(clearDate) : null,
       },
     });
 
@@ -95,6 +96,9 @@ router.put('/:id', async (req, res) => {
         plannedStartDate: req.body.plannedStartDate !== undefined
           ? (req.body.plannedStartDate ? new Date(req.body.plannedStartDate) : null)
           : debt.plannedStartDate,
+        clearDate: req.body.clearDate !== undefined
+          ? (req.body.clearDate ? new Date(req.body.clearDate) : null)
+          : debt.clearDate,
       },
     });
 

@@ -51,6 +51,7 @@ model Debt {
   interestRate     Decimal    @map("interest_rate") @db.Decimal(6, 4)
   minPayment       Decimal    @map("min_payment") @db.Decimal(14, 2)
   plannedStartDate DateTime?  @map("planned_start_date")
+  clearDate        DateTime?  @map("clear_date")
   createdAt        DateTime   @default(now()) @map("created_at")
 
   user         User                @relation(fields: [userId], references: [id])
@@ -111,6 +112,7 @@ model BudgetCategory {
   icon              String?
   color             String?
   isDefault         Boolean @default(false) @map("is_default")
+  sortOrder         Int     @default(0) @map("sort_order")
 
   user         User          @relation(fields: [userId], references: [id])
   transactions Transaction[]

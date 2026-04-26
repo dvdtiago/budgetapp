@@ -9,7 +9,7 @@ router.get('/categories', async (req, res) => {
   try {
     const categories = await prisma.budgetCategory.findMany({
       where: { userId: req.userId },
-      orderBy: { name: 'asc' },
+      orderBy: { sortOrder: 'asc' },
     });
     res.json(categories);
   } catch (err) {
@@ -24,6 +24,23 @@ router.post('/categories', async (req, res) => {
       data: { userId: req.userId, name, monthlyAllocation, icon, color },
     });
     res.json(category);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+router.put('/categories/reorder', async (req, res) => {
+  try {
+    const { order } = req.body; // [{ id, sortOrder }]
+    await Promise.all(
+      order.map(({ id, sortOrder }) =>
+        prisma.budgetCategory.updateMany({
+          where: { id: Number(id), userId: req.userId },
+          data: { sortOrder: Number(sortOrder) },
+        })
+      )
+    );
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Server error.' });
   }

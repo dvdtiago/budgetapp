@@ -13,14 +13,23 @@ function ProgressBar({ percent, color = 'bg-brand-600' }) {
   );
 }
 
+const BALANCE_HINTS = {
+  CREDIT_CARD: { current: 'Outstanding amount currently owed on this card', original: 'Your total credit limit' },
+  LOAN:        { current: 'Remaining loan balance to be paid', original: 'Original loan amount when taken out' },
+  MORTGAGE:    { current: 'Outstanding mortgage balance', original: 'Original mortgage amount' },
+};
+
 function DebtForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState(initial || {
     name: '', provider: '', type: 'CREDIT_CARD', status: 'ACTIVE',
     currentBalance: '', originalBalance: '', interestRate: '', minPayment: '',
-    plannedStartDate: '',
+    plannedStartDate: '', clearDate: '',
   });
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
+
+  const hints = BALANCE_HINTS[form.type] || BALANCE_HINTS.LOAN;
+  const isCC = form.type === 'CREDIT_CARD';
 
   async function submit(e) {
     e.preventDefault();
@@ -30,6 +39,7 @@ function DebtForm({ initial, onSave, onCancel }) {
       currentBalance: Number(form.currentBalance),
       originalBalance: Number(form.originalBalance),
       minPayment: Number(form.minPayment),
+      clearDate: form.clearDate || null,
     });
   }
 
@@ -64,10 +74,12 @@ function DebtForm({ initial, onSave, onCancel }) {
         <div>
           <label className="label">Current balance (₱)</label>
           <input className="input" type="number" min="0" step="0.01" value={form.currentBalance} onChange={e => set('currentBalance', e.target.value)} required />
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">{hints.current}</p>
         </div>
         <div>
           <label className="label">Original balance (₱)</label>
           <input className="input" type="number" min="0" step="0.01" value={form.originalBalance} onChange={e => set('originalBalance', e.target.value)} required />
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">{hints.original}</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -76,16 +88,23 @@ function DebtForm({ initial, onSave, onCancel }) {
           <input className="input" type="number" min="0" step="0.01" value={form.interestRate} onChange={e => set('interestRate', e.target.value)} placeholder="e.g. 24" required />
         </div>
         <div>
-          <label className="label">Monthly payment (₱)</label>
+          <label className="label">{isCC ? 'Minimum payment (₱)' : 'Monthly payment (₱)'}</label>
           <input className="input" type="number" min="0" step="0.01" value={form.minPayment} onChange={e => set('minPayment', e.target.value)} required />
         </div>
       </div>
-      {form.status === 'PLANNED' && (
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="label">Planned start date</label>
-          <input className="input" type="date" value={form.plannedStartDate} onChange={e => set('plannedStartDate', e.target.value)} />
+          <label className="label">Target clear date (optional)</label>
+          <input className="input" type="date" value={form.clearDate} onChange={e => set('clearDate', e.target.value)} />
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">Personal deadline to pay off this debt</p>
         </div>
-      )}
+        {form.status === 'PLANNED' && (
+          <div>
+            <label className="label">Planned start date</label>
+            <input className="input" type="date" value={form.plannedStartDate} onChange={e => set('plannedStartDate', e.target.value)} />
+          </div>
+        )}
+      </div>
       <div className="flex gap-2 pt-1">
         <button type="button" onClick={onCancel} className="btn-secondary flex-1">Cancel</button>
         <button type="submit" className="btn-primary flex-1">Save debt</button>
@@ -210,7 +229,7 @@ function DebtCard({ debt, onDelete, onPayment, onEdit }) {
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-neutral-800">{debt.name}</span>
+            <span className="font-semibold text-neutral-800 dark:text-neutral-100">{debt.name}</span>
             {debt.provider && <span className="text-xs text-neutral-400">{debt.provider}</span>}
             <span className={`badge ${debtStatusColor(debt.status)}`}>{debt.status === 'PAID_OFF' ? 'Paid off' : debt.status === 'PLANNED' ? 'Planned' : debtTypeLabel(debt.type)}</span>
             <span className="badge bg-red-50 text-red-600">{(Number(debt.interestRate) * 100).toFixed(2)}% p.a.</span>
@@ -222,10 +241,17 @@ function DebtCard({ debt, onDelete, onPayment, onEdit }) {
           <div className="mt-2">
             <ProgressBar percent={percent} color={debt.status === 'PAID_OFF' ? 'bg-green-500' : 'bg-brand-600'} />
           </div>
-          <p className="text-xs text-neutral-400 mt-1.5">Monthly payment: {formatPHP(debt.minPayment)}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
+            {debt.type === 'CREDIT_CARD' ? 'Min. payment' : 'Monthly payment'}: {formatPHP(debt.minPayment)}
+          </p>
           {debt.status === 'PLANNED' && debt.plannedStartDate && (
             <p className="text-xs text-amber-500 mt-0.5 flex items-center gap-1">
               <Calendar size={11} /> Starts {formatDate(debt.plannedStartDate)}
+            </p>
+          )}
+          {debt.clearDate && (
+            <p className="text-xs text-brand-500 dark:text-brand-400 mt-0.5 flex items-center gap-1">
+              <Calendar size={11} /> Target clear: {formatDate(debt.clearDate)}
             </p>
           )}
         </div>
@@ -288,7 +314,7 @@ export default function Debts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-neutral-800">Debts</h1>
+          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Debts</h1>
           <p className="text-sm text-neutral-400">Sorted by interest rate — highest first (Avalanche method)</p>
         </div>
         <button onClick={() => setShowForm(s => !s)} className="btn-primary">
