@@ -1,0 +1,205 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  debts              Debt[]
+  income             IncomeEntry[]
+  categories         BudgetCategory[]
+  transactions       Transaction[]
+  debtPayments       DebtPayment[]
+  surplusAllocations SurplusAllocation[]
+  settings           Settings?
+  goals              Goal[]
+
+  @@map("users")
+}
+
+enum DebtType {
+  CREDIT_CARD
+  LOAN
+  MORTGAGE
+}
+
+enum DebtStatus {
+  ACTIVE
+  PLANNED
+  PAID_OFF
+}
+
+model Debt {
+  id               Int        @id @default(autoincrement())
+  userId           Int        @map("user_id")
+  name             String
+  provider         String?
+  type             DebtType
+  status           DebtStatus @default(ACTIVE)
+  currentBalance   Decimal    @map("current_balance") @db.Decimal(14, 2)
+  originalBalance  Decimal    @map("original_balance") @db.Decimal(14, 2)
+  interestRate     Decimal    @map("interest_rate") @db.Decimal(6, 4)
+  minPayment       Decimal    @map("min_payment") @db.Decimal(14, 2)
+  plannedStartDate DateTime?  @map("planned_start_date")
+  createdAt        DateTime   @default(now()) @map("created_at")
+
+  user         User                @relation(fields: [userId], references: [id])
+  amortization AmortizationEntry[]
+  payments     DebtPayment[]
+
+  @@map("debts")
+}
+
+model AmortizationEntry {
+  id               Int      @id @default(autoincrement())
+  debtId           Int      @map("debt_id")
+  paymentNumber    Int      @map("payment_number")
+  paymentDate      DateTime @map("payment_date")
+  paymentAmount    Decimal  @map("payment_amount") @db.Decimal(14, 2)
+  principal        Decimal  @db.Decimal(14, 2)
+  interest         Decimal  @db.Decimal(14, 2)
+  remainingBalance Decimal  @map("remaining_balance") @db.Decimal(14, 2)
+  isPaid           Boolean  @default(false) @map("is_paid")
+
+  debt Debt @relation(fields: [debtId], references: [id], onDelete: Cascade)
+
+  @@map("amortization_entries")
+}
+
+enum Currency {
+  PHP
+  USD
+}
+
+enum IncomeType {
+  REGULAR
+  COMMISSION
+}
+
+model IncomeEntry {
+  id               Int        @id @default(autoincrement())
+  userId           Int        @map("user_id")
+  amountPhp        Decimal    @map("amount_php") @db.Decimal(14, 2)
+  originalAmount   Decimal    @map("original_amount") @db.Decimal(14, 2)
+  originalCurrency Currency   @map("original_currency")
+  exchangeRate     Decimal    @map("exchange_rate") @db.Decimal(10, 4)
+  type             IncomeType
+  description      String?
+  date             DateTime
+  createdAt        DateTime   @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("income_entries")
+}
+
+model BudgetCategory {
+  id                Int     @id @default(autoincrement())
+  userId            Int     @map("user_id")
+  name              String
+  monthlyAllocation Decimal @map("monthly_allocation") @db.Decimal(14, 2)
+  icon              String?
+  color             String?
+  isDefault         Boolean @default(false) @map("is_default")
+
+  user         User          @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@map("budget_categories")
+}
+
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  categoryId  Int?     @map("category_id")
+  amount      Decimal  @db.Decimal(14, 2)
+  description String?
+  date        DateTime
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user     User            @relation(fields: [userId], references: [id])
+  category BudgetCategory? @relation(fields: [categoryId], references: [id])
+
+  @@map("transactions")
+}
+
+model DebtPayment {
+  id        Int      @id @default(autoincrement())
+  debtId    Int      @map("debt_id")
+  userId    Int      @map("user_id")
+  amount    Decimal  @db.Decimal(14, 2)
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  debt Debt @relation(fields: [debtId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("debt_payments")
+}
+
+model SurplusAllocation {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  month        String
+  totalSurplus Decimal   @map("total_surplus") @db.Decimal(14, 2)
+  allocations  Json
+  confirmedAt  DateTime? @map("confirmed_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, month])
+  @@map("surplus_allocations")
+}
+
+enum GoalType {
+  SAVINGS
+  DEBT_FREE
+  PURCHASE
+}
+
+model Goal {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  name          String
+  type          GoalType
+  targetAmount  Decimal   @map("target_amount") @db.Decimal(14, 2)
+  currentAmount Decimal   @default(0) @map("current_amount") @db.Decimal(14, 2)
+  deadline      DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("goals")
+}
+
+enum ReminderFrequency {
+  WEEKLY
+  BIWEEKLY
+}
+
+model Settings {
+  id                Int               @id @default(autoincrement())
+  userId            Int               @unique @map("user_id")
+  reminderEnabled   Boolean           @default(false) @map("reminder_enabled")
+  reminderFrequency ReminderFrequency @default(WEEKLY) @map("reminder_frequency")
+  reminderEmail     String?           @map("reminder_email")
+  reminderDay       Int               @default(1) @map("reminder_day")
+  goalDate          DateTime?         @map("goal_date")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("settings")
+}
