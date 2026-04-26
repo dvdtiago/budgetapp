@@ -180,12 +180,21 @@ export default function Layout() {
 
       {/* ── TOP BAR ── */}
       <header className="fixed top-0 inset-x-0 z-30 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 h-14 md:pl-56">
-        {/* Desktop: month stepper left-aligned in remaining space */}
-        <div className="hidden md:flex items-center h-full px-6">
-          <MonthStepper />
-        </div>
+       {/* Desktop: Logo left, Stepper centered */}
+<div className="hidden md:grid grid-cols-3 items-center h-full px-6">
+  <div className="flex justify-start">
+    <Logo />
+  </div>
+  
+  <div className="flex justify-center">
+    <MonthStepper />
+  </div>
 
-        {/* Mobile*/}
+  {/* Empty div acts as a balancer to keep the Stepper centered */}
+  <div className="flex justify-end" /> 
+</div>
+
+{/* Mobile*/}
 	<div className="md:hidden relative flex items-center justify-between h-full px-4">
   		<Logo />
  		<MonthStepper />
