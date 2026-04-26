@@ -180,19 +180,21 @@ export default function Layout() {
 
 {/* ── TOP BAR ── */}
 <header className="fixed top-0 inset-x-0 z-30 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 h-14">
-  <div className="hidden md:flex items-center h-full px-6">
+  <div className="hidden md:flex items-center h-full">
     
-    {/* 1. Logo stays on the left */}
-    <Logo />
+    {/* 1. Logo container: Width matches Sidebar (w-56) and padding (px-5) */}
+    <div className="w-56 flex items-center px-5 border-r border-neutral-200 dark:border-neutral-800 h-full">
+      <Logo />
+    </div>
 
-    {/* 2. Stepper container fills all remaining space and centers its content */}
+    {/* 2. MonthStepper: Centered in the remaining flexible space */}
     <div className="flex-1 flex justify-center">
       <MonthStepper />
     </div>
     
   </div>
 
-  {/* Mobile View remains the same */}
+  {/* Mobile View */}
   <div className="md:hidden flex items-center justify-between h-full px-4">
     <Logo />
     <MonthStepper />
