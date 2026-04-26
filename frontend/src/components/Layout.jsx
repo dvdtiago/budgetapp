@@ -178,8 +178,8 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* ── TOP BAR ── */}
-      <header className="fixed top-0 inset-x-0 z-30 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 h-14">
+{/* ── TOP BAR ── */}
+<header className="fixed top-0 inset-x-0 z-30 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 h-14">
   <div className="hidden md:grid grid-cols-[14rem_1fr_14rem] items-center h-full px-6">
     
     {/* 1. Logo area (aligned with sidebar width) */}
@@ -195,21 +195,14 @@ export default function Layout() {
     {/* 3. Spacer (balances the grid to ensure perfect centering) */}
     <div className="invisible" aria-hidden="true" />
     
-  </div>  
-  <div className="flex justify-center">
-    <MonthStepper />
   </div>
 
-  {/* Empty div acts as a balancer to keep the Stepper centered */}
-  <div className="flex justify-end" /> 
-</div>
-
-{/* Mobile*/}
-	<div className="md:hidden relative flex items-center justify-between h-full px-4">
-  		<Logo />
- 		<MonthStepper />
-	</div>
-     </header>
+  {/* Mobile View */}
+  <div className="md:hidden flex items-center justify-between h-full px-4">
+    <Logo />
+    <MonthStepper />
+  </div>
+</header>
 
       {/* ── MOBILE BOTTOM NAV ── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 flex items-stretch h-16 safe-bottom">
