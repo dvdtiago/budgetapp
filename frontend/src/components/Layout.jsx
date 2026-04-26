@@ -185,12 +185,12 @@ export default function Layout() {
           <MonthStepper />
         </div>
 
-        {/* Mobile: logo left, month centered absolutely, nothing right */}
-        <div className="md:hidden relative flex items-center h-full px-4">
-          <Logo />
-          <MonthStepper />
-        </div>
-      </header>
+{/* Mobile*/}
+<div className="md:hidden relative flex items-center justify-between h-full px-4">
+  <Logo />
+  <MonthStepper />
+</div>
+
 
       {/* ── MOBILE BOTTOM NAV ── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 flex items-stretch h-16 safe-bottom">
