@@ -9,10 +9,10 @@ import { useMonth } from '../lib/MonthContext.jsx';
 
 // Primary bottom nav items (mobile)
 const primaryNav = [
-  { to: '/dashboard',    label: 'Home',    icon: LayoutDashboard },
-  { to: '/budget',       label: 'Budget',  icon: BarChart2 },
-  { to: '/debts',        label: 'Debts',   icon: CreditCard },
-  { to: '/goals',        label: 'Goals',   icon: Target },
+  { to: '/dashboard',    label: 'Home',         icon: LayoutDashboard },
+  { to: '/budget',       label: 'Budget',       icon: BarChart2 },
+  { to: '/transactions', label: 'Transactions', icon: List },
+  { to: '/debts',        label: 'Debts',        icon: CreditCard },
 ];
 
 // All nav items (desktop sidebar + More sheet)
@@ -188,7 +188,7 @@ export default function Layout() {
         {/* Mobile: logo left, month centered absolutely, nothing right */}
         <div className="md:hidden relative flex items-center h-full px-4">
           <Logo />
-          <div className="absolute left-1/2 -translate-x-1/2">
+
             <MonthStepper />
           </div>
         </div>
