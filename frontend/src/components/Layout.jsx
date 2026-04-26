@@ -179,13 +179,23 @@ export default function Layout() {
       </aside>
 
       {/* ── TOP BAR ── */}
-      <header className="fixed top-0 inset-x-0 z-30 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 h-14 md:pl-56">
-       {/* Desktop: Logo left, Stepper centered */}
-<div className="hidden md:grid grid-cols-3 items-center h-full px-6">
-  <div className="flex justify-start">
-    <Logo />
-  </div>
-  
+      <header className="fixed top-0 inset-x-0 z-30 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 h-14">
+  <div className="hidden md:grid grid-cols-[14rem_1fr_14rem] items-center h-full px-6">
+    
+    {/* 1. Logo area (aligned with sidebar width) */}
+    <div className="flex justify-start">
+      <Logo />
+    </div>
+
+    {/* 2. Month Stepper (centered in the content area) */}
+    <div className="flex justify-center">
+      <MonthStepper />
+    </div>
+
+    {/* 3. Spacer (balances the grid to ensure perfect centering) */}
+    <div className="invisible" aria-hidden="true" />
+    
+  </div>  
   <div className="flex justify-center">
     <MonthStepper />
   </div>
