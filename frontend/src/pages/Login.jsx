@@ -25,21 +25,35 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-900 px-4">
       <div className="w-full max-w-sm">
+
+        {/* Logo + hero */}
         <div className="text-center mb-8">
-          <div className="text-4xl mb-3">💰</div>
-          <h1 className="text-2xl font-bold text-slate-800">Budget Tracker</h1>
-          <p className="text-slate-400 text-sm mt-1">Sign in to your account</p>
+          <div className="w-14 h-14 rounded-[18px] bg-brand-500 flex items-center justify-center mx-auto mb-4 shadow-brand">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          </div>
+          <h1 className="font-display text-4xl font-medium text-neutral-800 dark:text-neutral-100 tracking-tight">
+            budgetapp
+          </h1>
+          <p className="text-neutral-400 dark:text-neutral-500 text-sm mt-2">
+            Your personal money companion
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card space-y-4">
+        {/* Form card */}
+        <div className="card shadow-float space-y-4">
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>
+            <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm px-3 py-2 rounded-md">
+              {error}
+            </div>
           )}
 
           <div>
-            <label className="label">Email</label>
+            <label className="label">Email address</label>
             <input
               type="email"
               className="input"
@@ -62,15 +76,18 @@ export default function Login() {
             />
           </div>
 
-          <button type="submit" className="btn-primary w-full" disabled={loading}>
+          <button type="submit" onClick={handleSubmit} className="btn-primary w-full py-2.5 text-sm" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
 
-          <p className="text-center text-sm text-slate-400">
+          <p className="text-center text-sm text-neutral-400 dark:text-neutral-500">
             No account yet?{' '}
-            <Link to="/register" className="text-brand-600 hover:underline">Create one</Link>
+            <Link to="/register" className="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+              Create one free
+            </Link>
           </p>
-        </form>
+        </div>
+
       </div>
     </div>
   );

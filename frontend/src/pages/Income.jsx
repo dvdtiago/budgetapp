@@ -59,8 +59,8 @@ export default function Income() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Income</h1>
-          <p className="text-sm text-slate-400 dark:text-slate-500">All amounts shown in Philippine Peso (₱)</p>
+          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Income</h1>
+          <p className="text-sm text-neutral-400 dark:text-neutral-500">All amounts shown in Philippine Peso (₱)</p>
         </div>
         <button onClick={() => setShowForm(s => !s)} className="btn-primary">
           <Plus size={15} /> Log income
@@ -70,15 +70,15 @@ export default function Income() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Total income</p>
-          <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{formatPHP(totalIncome)}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Total income</p>
+          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalIncome)}</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Regular</p>
-          <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{formatPHP(regular)}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Regular</p>
+          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(regular)}</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Commissions</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Commissions</p>
           <p className="text-lg font-bold text-green-600 dark:text-green-400">{formatPHP(commissions)}</p>
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function Income() {
       {/* Form */}
       {showForm && (
         <div className="card">
-          <h2 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">Log income</h2>
+          <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 mb-4">Log income</h2>
           <form onSubmit={submit} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -116,7 +116,7 @@ export default function Income() {
               )}
             </div>
             {form.originalCurrency === 'USD' && form.originalAmount && form.exchangeRate && (
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <p className="text-xs text-neutral-400 dark:text-neutral-500">
                 = {formatPHP(Number(form.originalAmount) * Number(form.exchangeRate))} PHP
               </p>
             )}
@@ -142,11 +142,11 @@ export default function Income() {
 
       {/* Entries */}
       {loading ? (
-        <div className="text-center py-10 text-slate-400">Loading…</div>
+        <div className="text-center py-10 text-neutral-400">Loading…</div>
       ) : entries.length === 0 ? (
         <div className="card text-center py-12">
           <p className="text-3xl mb-3">💵</p>
-          <p className="font-medium text-slate-800 dark:text-slate-100">No income logged this month</p>
+          <p className="font-medium text-neutral-800 dark:text-neutral-100">No income logged this month</p>
           <button onClick={() => setShowForm(true)} className="btn-primary mt-4">
             <Plus size={15} /> Log your first entry
           </button>
@@ -159,17 +159,17 @@ export default function Income() {
                 {e.type === 'COMMISSION' ? '★' : '₱'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{e.description || (e.type === 'REGULAR' ? 'Regular income' : 'Commission')}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500">
+                <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100">{e.description || (e.type === 'REGULAR' ? 'Regular income' : 'Commission')}</p>
+                <p className="text-xs text-neutral-400 dark:text-neutral-500">
                   {formatDate(e.date)}
                   {e.originalCurrency === 'USD' && ` · $${Number(e.originalAmount).toLocaleString()} @ ₱${Number(e.exchangeRate).toFixed(2)}`}
                 </p>
               </div>
               <div className="text-right shrink-0">
                 <p className="text-sm font-semibold text-green-600 dark:text-green-400">{formatPHP(e.amountPhp)}</p>
-                {e.originalCurrency === 'USD' && <p className="text-xs text-slate-400 dark:text-slate-500">${Number(e.originalAmount).toLocaleString()}</p>}
+                {e.originalCurrency === 'USD' && <p className="text-xs text-neutral-400 dark:text-neutral-500">${Number(e.originalAmount).toLocaleString()}</p>}
               </div>
-              <button onClick={() => deleteEntry(e.id)} className="p-1.5 rounded-lg text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 ml-1">
+              <button onClick={() => deleteEntry(e.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 ml-1">
                 <Trash2 size={15} />
               </button>
             </div>

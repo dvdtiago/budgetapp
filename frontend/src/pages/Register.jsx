@@ -25,12 +25,12 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">💰</div>
-          <h1 className="text-2xl font-bold text-slate-800">Create your account</h1>
-          <p className="text-slate-400 text-sm mt-1">Start tracking your finances today</p>
+          <h1 className="text-2xl font-bold text-neutral-800">Create your account</h1>
+          <p className="text-neutral-400 text-sm mt-1">Start tracking your finances today</p>
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-4">
@@ -79,7 +79,7 @@ export default function Register() {
             {loading ? 'Creating account…' : 'Create account'}
           </button>
 
-          <p className="text-center text-sm text-slate-400">
+          <p className="text-center text-sm text-neutral-400">
             Already have an account?{' '}
             <Link to="/login" className="text-brand-600 hover:underline">Sign in</Link>
           </p>

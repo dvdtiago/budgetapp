@@ -7,7 +7,7 @@ const DEBT_TYPES = ['CREDIT_CARD', 'LOAN', 'MORTGAGE'];
 
 function ProgressBar({ percent, color = 'bg-brand-600' }) {
   return (
-    <div className="w-full bg-slate-100 rounded-full h-1.5">
+    <div className="w-full bg-neutral-100 rounded-full h-1.5">
       <div className={`${color} h-1.5 rounded-full`} style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
     </div>
   );
@@ -103,8 +103,8 @@ function PaymentForm({ debt, onSave, onCancel }) {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3 bg-slate-50 rounded-xl p-4 mt-3">
-      <p className="text-sm font-medium text-slate-700">Log a payment for {debt.name}</p>
+    <form onSubmit={submit} className="space-y-3 bg-neutral-50 rounded-xl p-4 mt-3">
+      <p className="text-sm font-medium text-neutral-700">Log a payment for {debt.name}</p>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Amount (₱)</label>
@@ -147,9 +147,9 @@ function AmortizationTable({ debtId }) {
   }
 
   return (
-    <div className="mt-3 bg-slate-50 rounded-xl p-4">
+    <div className="mt-3 bg-neutral-50 rounded-xl p-4">
       <div className="flex items-center gap-3 mb-3">
-        <p className="text-sm font-medium text-slate-700 flex-1">Amortization Schedule</p>
+        <p className="text-sm font-medium text-neutral-700 flex-1">Amortization Schedule</p>
         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input w-auto text-xs" />
         <button onClick={generate} disabled={generating} className="btn-primary text-xs">
           <Zap size={13} />
@@ -160,7 +160,7 @@ function AmortizationTable({ debtId }) {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-slate-400 border-b border-slate-200">
+              <tr className="text-neutral-400 border-b border-neutral-200">
                 <th className="text-left py-1.5 pr-3">#</th>
                 <th className="text-left py-1.5 pr-3">Date</th>
                 <th className="text-right py-1.5 pr-3">Payment</th>
@@ -171,7 +171,7 @@ function AmortizationTable({ debtId }) {
             </thead>
             <tbody>
               {entries.slice(0, 24).map(e => (
-                <tr key={e.id} className="border-b border-slate-100 text-slate-600">
+                <tr key={e.id} className="border-b border-neutral-100 text-neutral-600">
                   <td className="py-1.5 pr-3">{e.paymentNumber}</td>
                   <td className="py-1.5 pr-3">{formatDate(e.paymentDate)}</td>
                   <td className="py-1.5 pr-3 text-right">{formatPHP(e.paymentAmount)}</td>
@@ -183,11 +183,11 @@ function AmortizationTable({ debtId }) {
             </tbody>
           </table>
           {entries.length > 24 && (
-            <p className="text-xs text-slate-400 mt-2 text-center">Showing first 24 of {entries.length} payments</p>
+            <p className="text-xs text-neutral-400 mt-2 text-center">Showing first 24 of {entries.length} payments</p>
           )}
         </div>
       ) : (
-        <p className="text-xs text-slate-400">No schedule yet. Click "Generate" to build the amortization table from the current balance.</p>
+        <p className="text-xs text-neutral-400">No schedule yet. Click "Generate" to build the amortization table from the current balance.</p>
       )}
     </div>
   );
@@ -210,19 +210,19 @@ function DebtCard({ debt, onDelete, onPayment, onEdit }) {
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-slate-800">{debt.name}</span>
-            {debt.provider && <span className="text-xs text-slate-400">{debt.provider}</span>}
+            <span className="font-semibold text-neutral-800">{debt.name}</span>
+            {debt.provider && <span className="text-xs text-neutral-400">{debt.provider}</span>}
             <span className={`badge ${debtStatusColor(debt.status)}`}>{debt.status === 'PAID_OFF' ? 'Paid off' : debt.status === 'PLANNED' ? 'Planned' : debtTypeLabel(debt.type)}</span>
             <span className="badge bg-red-50 text-red-600">{(Number(debt.interestRate) * 100).toFixed(2)}% p.a.</span>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-lg font-bold text-slate-800">{formatPHP(debt.currentBalance)}</span>
-            <span className="text-xs text-slate-400">of {formatPHP(debt.originalBalance)} · {formatPercent(percent)} paid</span>
+            <span className="text-lg font-bold text-neutral-800">{formatPHP(debt.currentBalance)}</span>
+            <span className="text-xs text-neutral-400">of {formatPHP(debt.originalBalance)} · {formatPercent(percent)} paid</span>
           </div>
           <div className="mt-2">
             <ProgressBar percent={percent} color={debt.status === 'PAID_OFF' ? 'bg-green-500' : 'bg-brand-600'} />
           </div>
-          <p className="text-xs text-slate-400 mt-1.5">Monthly payment: {formatPHP(debt.minPayment)}</p>
+          <p className="text-xs text-neutral-400 mt-1.5">Monthly payment: {formatPHP(debt.minPayment)}</p>
           {debt.status === 'PLANNED' && debt.plannedStartDate && (
             <p className="text-xs text-amber-500 mt-0.5 flex items-center gap-1">
               <Calendar size={11} /> Starts {formatDate(debt.plannedStartDate)}
@@ -233,10 +233,10 @@ function DebtCard({ debt, onDelete, onPayment, onEdit }) {
           {debt.status !== 'PAID_OFF' && (
             <button onClick={() => setShowPayment(s => !s)} className="btn-secondary text-xs">Pay</button>
           )}
-          <button onClick={() => setExpanded(s => !s)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100">
+          <button onClick={() => setExpanded(s => !s)} className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100">
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
-          <button onClick={() => onDelete(debt.id)} className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50">
+          <button onClick={() => onDelete(debt.id)} className="p-1.5 rounded-lg text-neutral-300 hover:text-red-500 hover:bg-red-50">
             <Trash2 size={15} />
           </button>
         </div>
@@ -282,14 +282,14 @@ export default function Debts() {
   const planned = debts.filter(d => d.status === 'PLANNED');
   const paidOff = debts.filter(d => d.status === 'PAID_OFF');
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400">Loading…</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-neutral-400">Loading…</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-800">Debts</h1>
-          <p className="text-sm text-slate-400">Sorted by interest rate — highest first (Avalanche method)</p>
+          <h1 className="text-xl font-bold text-neutral-800">Debts</h1>
+          <p className="text-sm text-neutral-400">Sorted by interest rate — highest first (Avalanche method)</p>
         </div>
         <button onClick={() => setShowForm(s => !s)} className="btn-primary">
           <Plus size={15} /> Add debt
@@ -298,14 +298,14 @@ export default function Debts() {
 
       {showForm && (
         <div className="card">
-          <h2 className="font-semibold text-slate-800 mb-4">New debt</h2>
+          <h2 className="font-semibold text-neutral-800 mb-4">New debt</h2>
           <DebtForm onSave={addDebt} onCancel={() => setShowForm(false)} />
         </div>
       )}
 
       {active.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Active debts</h2>
+          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-3">Active debts</h2>
           <div className="space-y-3">
             {active.map((d, i) => (
               <div key={d.id} className="relative">
@@ -323,7 +323,7 @@ export default function Debts() {
 
       {planned.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Upcoming / planned</h2>
+          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-3">Upcoming / planned</h2>
           <div className="space-y-3">
             {planned.map(d => <DebtCard key={d.id} debt={d} onDelete={deleteDebt} onPayment={logPayment} />)}
           </div>
@@ -332,7 +332,7 @@ export default function Debts() {
 
       {paidOff.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Paid off 🎉</h2>
+          <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-3">Paid off 🎉</h2>
           <div className="space-y-3">
             {paidOff.map(d => <DebtCard key={d.id} debt={d} onDelete={deleteDebt} onPayment={logPayment} />)}
           </div>
@@ -342,8 +342,8 @@ export default function Debts() {
       {debts.length === 0 && !showForm && (
         <div className="card text-center py-12">
           <p className="text-4xl mb-3">💳</p>
-          <p className="font-medium text-slate-800">No debts added yet</p>
-          <p className="text-sm text-slate-400 mt-1">Add your credit cards and loans to start tracking.</p>
+          <p className="font-medium text-neutral-800">No debts added yet</p>
+          <p className="text-sm text-neutral-400 mt-1">Add your credit cards and loans to start tracking.</p>
           <button onClick={() => setShowForm(true)} className="btn-primary mt-4">
             <Plus size={15} /> Add your first debt
           </button>

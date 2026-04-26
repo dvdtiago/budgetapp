@@ -20,10 +20,10 @@ function EditTransactionModal({ tx, categories, onSave, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 dark:bg-black/50 px-4 pb-4 sm:pb-0">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
+      <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-slate-800 dark:text-slate-100">Edit transaction</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"><X size={16} /></button>
+          <h3 className="font-semibold text-neutral-800 dark:text-neutral-100">Edit transaction</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700"><X size={16} /></button>
         </div>
         <form onSubmit={submit} className="space-y-3">
           <div>
@@ -121,31 +121,31 @@ export default function Transactions() {
   const totalExpenses = transactions.reduce((s, t) => s + Number(t.amount), 0);
   const totalPayments = debtPayments.reduce((s, p) => s + Number(p.amount), 0);
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400">Loading…</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-neutral-400">Loading…</div>;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Transactions</h1>
-        <p className="text-sm text-slate-400 dark:text-slate-500">All expenses and debt payments in one view</p>
+        <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Transactions</h1>
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">All expenses and debt payments in one view</p>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Expenses</p>
-          <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{formatPHP(totalExpenses)}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">{transactions.length} entries</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Expenses</p>
+          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalExpenses)}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">{transactions.length} entries</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Debt payments</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Debt payments</p>
           <p className="text-lg font-bold text-brand-600">{formatPHP(totalPayments)}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">{debtPayments.length} entries</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">{debtPayments.length} entries</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Total out</p>
-          <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{formatPHP(totalExpenses + totalPayments)}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">{allEntries.length} entries</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Total out</p>
+          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalExpenses + totalPayments)}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">{allEntries.length} entries</p>
         </div>
       </div>
 
@@ -158,7 +158,7 @@ export default function Transactions() {
             className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
               filter === val
                 ? 'bg-brand-600 text-white'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
             }`}
           >
             {label}
@@ -170,27 +170,27 @@ export default function Transactions() {
       {filtered.length === 0 ? (
         <div className="card text-center py-12">
           <p className="text-3xl mb-3">📋</p>
-          <p className="font-medium text-slate-800 dark:text-slate-100">No entries yet</p>
-          <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">Log expenses on the Budget page or payments on the Debts page.</p>
+          <p className="font-medium text-neutral-800 dark:text-neutral-100">No entries yet</p>
+          <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">Log expenses on the Budget page or payments on the Debts page.</p>
         </div>
       ) : (
         <div className="card p-0 overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-700">
-                <th className="text-left text-xs font-medium text-slate-400 dark:text-slate-500 px-4 py-3">Type</th>
-                <th className="text-left text-xs font-medium text-slate-400 dark:text-slate-500 px-4 py-3">Description</th>
-                <th className="text-left text-xs font-medium text-slate-400 dark:text-slate-500 px-4 py-3 hidden sm:table-cell">Date</th>
-                <th className="text-right text-xs font-medium text-slate-400 dark:text-slate-500 px-4 py-3">Amount</th>
+              <tr className="border-b border-neutral-100 dark:border-neutral-700">
+                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Type</th>
+                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Description</th>
+                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 hidden sm:table-cell">Date</th>
+                <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Amount</th>
                 <th className="px-4 py-3 w-16"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map(entry => (
-                <tr key={`${entry._type}-${entry.id}`} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <tr key={`${entry._type}-${entry.id}`} className="border-b border-neutral-50 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
                   <td className="px-4 py-3">
                     {entry._type === 'expense' ? (
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
                         <ShoppingBag size={11} />
                         {entry.category?.name || 'Expense'}
                       </span>
@@ -202,29 +202,29 @@ export default function Transactions() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-sm text-slate-800 dark:text-slate-100 truncate max-w-[160px]">
+                    <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate max-w-[160px]">
                       {entry._type === 'expense'
                         ? (entry.description || entry.category?.name || 'Expense')
                         : (entry.notes || 'Debt payment')}
                     </p>
                   </td>
                   <td className="px-4 py-3 hidden sm:table-cell">
-                    <p className="text-sm text-slate-400 dark:text-slate-500">{formatDate(entry.date)}</p>
+                    <p className="text-sm text-neutral-400 dark:text-neutral-500">{formatDate(entry.date)}</p>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-800 dark:text-slate-100'}`}>
+                    <span className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
                       {formatPHP(entry.amount)}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
                       {entry._type === 'expense' && (
-                        <button onClick={() => setEditingTx(entry)} className="p-1.5 rounded-lg text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <button onClick={() => setEditingTx(entry)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
                           <Pencil size={13} />
                         </button>
                       )}
                       {entry._type === 'expense' && (
-                        <button onClick={() => deleteTx(entry.id)} className="p-1.5 rounded-lg text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                        <button onClick={() => deleteTx(entry.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                           <Trash2 size={13} />
                         </button>
                       )}

@@ -10,8 +10,8 @@ function ProgressBar({ value, max }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   const over = value > max && max > 0;
   return (
-    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
-      <div className={`h-2 rounded-full transition-all ${over ? 'bg-red-400' : 'bg-brand-600'}`} style={{ width: `${pct}%` }} />
+    <div className="progress-track">
+      <div className={over ? 'progress-fill-red' : 'progress-fill'} style={{ width: `${pct}%` }} />
     </div>
   );
 }
@@ -32,10 +32,10 @@ function EditTransactionModal({ tx, categories, onSave, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 dark:bg-black/50 px-4 pb-4 sm:pb-0">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
+      <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-slate-800 dark:text-slate-100">Edit transaction</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"><X size={16} /></button>
+          <h3 className="font-semibold text-neutral-800 dark:text-neutral-100">Edit transaction</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700"><X size={16} /></button>
         </div>
         <form onSubmit={submit} className="space-y-3">
           <div>
@@ -179,14 +179,14 @@ export default function Budget() {
     .filter(c => Number(c.monthlyAllocation) > 0 || c.spent > 0)
     .map(c => ({ name: `${c.icon || ''} ${c.name}`.trim(), Budgeted: Number(c.monthlyAllocation), Spent: c.spent }));
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400">Loading…</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-neutral-400">Loading…</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Budget</h1>
-          <p className="text-sm text-slate-400 dark:text-slate-500">Expenses and debt payments in one place</p>
+          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Budget</h1>
+          <p className="text-sm text-neutral-400 dark:text-neutral-500">Expenses and debt payments in one place</p>
         </div>
         <button onClick={() => setShowAddTx(s => !s)} className="btn-primary">
           <Plus size={15} /> Log expense
@@ -196,28 +196,28 @@ export default function Budget() {
       {/* Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Total budgeted</p>
-          <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{formatPHP(totalBudgeted)}</p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">expenses + min payments</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Total budgeted</p>
+          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalBudgeted)}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500">expenses + min payments</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Expenses spent</p>
-          <p className={`text-lg font-bold ${totalExpenses > totalAllocated ? 'text-red-500' : 'text-slate-800 dark:text-slate-100'}`}>{formatPHP(totalExpenses)}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Expenses spent</p>
+          <p className={`text-lg font-bold ${totalExpenses > totalAllocated ? 'text-red-500' : 'text-neutral-800 dark:text-neutral-100'}`}>{formatPHP(totalExpenses)}</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Debt payments made</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Debt payments made</p>
           <p className="text-lg font-bold text-brand-600">{formatPHP(totalDebtPaid)}</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">Total out</p>
-          <p className="text-lg font-bold text-slate-800 dark:text-slate-100">{formatPHP(totalExpenses + totalDebtPaid)}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Total out</p>
+          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalExpenses + totalDebtPaid)}</p>
         </div>
       </div>
 
       {/* Log expense form */}
       {showAddTx && (
         <div className="card">
-          <h2 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">Log an expense</h2>
+          <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 mb-4">Log an expense</h2>
           <form onSubmit={addTransaction} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -253,16 +253,16 @@ export default function Budget() {
       {/* Bar chart */}
       {chartData.length > 0 && (
         <div className="card">
-          <h2 className="font-semibold text-slate-800 dark:text-slate-100 mb-4">Expenses: Budgeted vs. Spent</h2>
+          <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 mb-4">Expenses: Budgeted vs. Spent</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E8E8E2" />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₱${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={v => formatPHP(v)} />
               <Legend />
-              <Bar dataKey="Budgeted" fill="#e0e7ff" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Spent" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Budgeted" fill="#FDE4C8" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Spent" fill="#E07030" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -270,7 +270,7 @@ export default function Budget() {
 
       {/* ── DEBT PAYMENTS SECTION ── */}
       <section>
-        <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">Debt Payments</h2>
+        <h2 className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-3">Debt Payments</h2>
         <div className="space-y-3">
           {debts.map(debt => {
             const paid = debtPayments.filter(p => p.debtId === debt.id).reduce((s, p) => s + Number(p.amount), 0);
@@ -281,9 +281,9 @@ export default function Budget() {
                 <div className="flex items-center gap-3 mb-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-slate-800 dark:text-slate-100">{debt.name}</span>
+                      <span className="font-medium text-neutral-800 dark:text-neutral-100">{debt.name}</span>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-slate-400 dark:text-slate-500">{formatPHP(paid)} / {formatPHP(min)}</span>
+                        <span className="text-xs text-neutral-400 dark:text-neutral-500">{formatPHP(paid)} / {formatPHP(min)}</span>
                         <button
                           onClick={() => setPayingDebtId(payingDebtId === debt.id ? null : debt.id)}
                           className="btn-secondary text-xs py-1"
@@ -292,7 +292,7 @@ export default function Budget() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
                       Min. payment: {formatPHP(min)} · Balance: {formatPHP(debt.currentBalance)} · {(Number(debt.interestRate) * 100).toFixed(2)}% p.a.
                     </p>
                   </div>
@@ -300,7 +300,7 @@ export default function Budget() {
                 <ProgressBar value={paid} max={min} />
 
                 {payingDebtId === debt.id && (
-                  <form onSubmit={e => logDebtPayment(debt.id, e)} className="mt-3 space-y-3 pt-3 border-t border-slate-100 dark:border-slate-700">
+                  <form onSubmit={e => logDebtPayment(debt.id, e)} className="mt-3 space-y-3 pt-3 border-t border-neutral-100 dark:border-neutral-700">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="label">Amount (₱)</label>
@@ -325,7 +325,7 @@ export default function Budget() {
             );
           })}
           {debts.length === 0 && (
-            <p className="text-sm text-slate-400 dark:text-slate-500">No active debts. <Link to="/debts" className="text-brand-600 hover:underline">Add one here.</Link></p>
+            <p className="text-sm text-neutral-400 dark:text-neutral-500">No active debts. <Link to="/debts" className="text-brand-600 hover:underline">Add one here.</Link></p>
           )}
         </div>
       </section>
@@ -333,7 +333,7 @@ export default function Budget() {
       {/* ── EXPENSE CATEGORIES SECTION ── */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Expense Categories</h2>
+          <h2 className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Expense Categories</h2>
           <button onClick={() => { setShowAddCat(s => !s); setEditCat(null); }} className="btn-secondary text-xs">
             <Plus size={13} /> Add category
           </button>
@@ -341,7 +341,7 @@ export default function Budget() {
 
         {(showAddCat || editCat) && (
           <div className="card mb-3">
-            <h3 className="font-medium text-slate-800 dark:text-slate-100 mb-3">{editCat ? 'Edit category' : 'New category'}</h3>
+            <h3 className="font-medium text-neutral-800 dark:text-neutral-100 mb-3">{editCat ? 'Edit category' : 'New category'}</h3>
             <form onSubmit={saveCategory} className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -378,17 +378,17 @@ export default function Budget() {
                 <span className="text-xl">{cat.icon || '📦'}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-medium text-slate-800 dark:text-slate-100">{cat.name}</span>
+                    <span className="font-medium text-neutral-800 dark:text-neutral-100">{cat.name}</span>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => startEdit(cat)} className="p-1 rounded text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                      <button onClick={() => startEdit(cat)} className="p-1 rounded text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
                         <Pencil size={13} />
                       </button>
-                      <button onClick={() => deleteCategory(cat.id)} className="p-1 rounded text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                      <button onClick={() => deleteCategory(cat.id)} className="p-1 rounded text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                         <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  <div className="flex items-center justify-between text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
                     <span>{formatPHP(cat.spent)} spent</span>
                     <span>of {formatPHP(cat.monthlyAllocation)}</span>
                   </div>
@@ -403,20 +403,20 @@ export default function Budget() {
       {/* ── TRANSACTIONS LIST ── */}
       {transactions.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">All expenses this month</h2>
+          <h2 className="text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide mb-3">All expenses this month</h2>
           <div className="space-y-2">
             {transactions.map(tx => (
               <div key={tx.id} className="card flex items-center gap-3 py-3">
                 <span className="text-base">{tx.category?.icon || '📦'}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-slate-800 dark:text-slate-100 truncate">{tx.description || tx.category?.name || 'Expense'}</p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(tx.date)} · {tx.category?.name || 'Uncategorized'}</p>
+                  <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate">{tx.description || tx.category?.name || 'Expense'}</p>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-500">{formatDate(tx.date)} · {tx.category?.name || 'Uncategorized'}</p>
                 </div>
-                <span className="text-sm font-medium text-slate-800 dark:text-slate-100 shrink-0">{formatPHP(tx.amount)}</span>
-                <button onClick={() => setEditingTx(tx)} className="p-1.5 rounded-lg text-slate-300 dark:text-slate-600 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100 shrink-0">{formatPHP(tx.amount)}</span>
+                <button onClick={() => setEditingTx(tx)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
                   <Pencil size={14} />
                 </button>
-                <button onClick={() => deleteTx(tx.id)} className="p-1.5 rounded-lg text-slate-300 dark:text-slate-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                <button onClick={() => deleteTx(tx.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                   <Trash2 size={14} />
                 </button>
               </div>

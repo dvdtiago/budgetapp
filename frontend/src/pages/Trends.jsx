@@ -19,7 +19,7 @@ export default function Trends() {
     });
   }, []);
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400">Loading…</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-neutral-400">Loading…</div>;
 
   const { incomeVsExpenses, debtHistory, categoryTrend } = data;
 
@@ -48,14 +48,14 @@ export default function Trends() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-slate-800">Trends</h1>
-        <p className="text-sm text-slate-400">Last 12 months of financial history</p>
+        <h1 className="text-xl font-bold text-neutral-800">Trends</h1>
+        <p className="text-sm text-neutral-400">Last 12 months of financial history</p>
       </div>
 
       {/* Debt over time */}
       <div className="card">
-        <h2 className="font-semibold text-slate-800 mb-1">Total Debt Over Time</h2>
-        <p className="text-xs text-slate-400 mb-4">Watch this line go down — that's the goal.</p>
+        <h2 className="font-semibold text-neutral-800 mb-1">Total Debt Over Time</h2>
+        <p className="text-xs text-neutral-400 mb-4">Watch this line go down — that's the goal.</p>
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={debtChartData}>
             <defs>
@@ -75,8 +75,8 @@ export default function Trends() {
 
       {/* Income vs Expenses */}
       <div className="card">
-        <h2 className="font-semibold text-slate-800 mb-1">Income vs. Expenses</h2>
-        <p className="text-xs text-slate-400 mb-4">The bigger the gap, the more you can put toward debt.</p>
+        <h2 className="font-semibold text-neutral-800 mb-1">Income vs. Expenses</h2>
+        <p className="text-xs text-neutral-400 mb-4">The bigger the gap, the more you can put toward debt.</p>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={incomeChartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -93,8 +93,8 @@ export default function Trends() {
       {/* Spending by category */}
       {catChartData.length > 0 && categoryNames.length > 0 && (
         <div className="card">
-          <h2 className="font-semibold text-slate-800 mb-1">Spending by Category</h2>
-          <p className="text-xs text-slate-400 mb-4">Last 6 months</p>
+          <h2 className="font-semibold text-neutral-800 mb-1">Spending by Category</h2>
+          <p className="text-xs text-neutral-400 mb-4">Last 6 months</p>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={catChartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -113,8 +113,8 @@ export default function Trends() {
       {debtChartData.every(d => d.totalDebt === 0) && incomeChartData.every(d => d.income === 0) && (
         <div className="card text-center py-12">
           <p className="text-3xl mb-3">📈</p>
-          <p className="font-medium text-slate-800">No data yet</p>
-          <p className="text-sm text-slate-400 mt-1">Start logging income, expenses, and debt payments to see your trends here.</p>
+          <p className="font-medium text-neutral-800">No data yet</p>
+          <p className="text-sm text-neutral-400 mt-1">Start logging income, expenses, and debt payments to see your trends here.</p>
         </div>
       )}
     </div>

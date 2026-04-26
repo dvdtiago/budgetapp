@@ -86,7 +86,7 @@ function GoalForm({ initial, onSave, onCancel }) {
 
 function ProgressBar({ percent, type }) {
   return (
-    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+    <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2">
       <div
         className={`h-2 rounded-full transition-all ${PROGRESS_COLORS[type] ?? 'bg-brand-500'}`}
         style={{ width: `${Math.min(100, percent)}%` }}
@@ -154,14 +154,14 @@ export default function Goals() {
     setProgressEdit(null);
   }
 
-  if (loading) return <div className="flex items-center justify-center h-40 text-slate-400">Loading…</div>;
+  if (loading) return <div className="flex items-center justify-center h-40 text-neutral-400">Loading…</div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Goals</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Track savings targets and milestones</p>
+          <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">Goals</h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">Track savings targets and milestones</p>
         </div>
         {!showForm && !editing && (
           <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2">
@@ -172,15 +172,15 @@ export default function Goals() {
 
       {showForm && (
         <div className="card">
-          <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">New Goal</h2>
+          <h2 className="text-base font-semibold text-neutral-700 dark:text-neutral-200 mb-4">New Goal</h2>
           <GoalForm onSave={handleCreate} onCancel={() => setShowForm(false)} />
         </div>
       )}
 
       {goals.length === 0 && !showForm ? (
         <div className="card flex flex-col items-center py-16 text-center gap-3">
-          <Target size={36} className="text-slate-300 dark:text-slate-600" />
-          <p className="text-slate-500 dark:text-slate-400 text-sm">No goals yet. Create one to start tracking your progress.</p>
+          <Target size={36} className="text-neutral-300 dark:text-neutral-600" />
+          <p className="text-neutral-500 dark:text-neutral-400 text-sm">No goals yet. Create one to start tracking your progress.</p>
           <button onClick={() => setShowForm(true)} className="btn-primary mt-1 flex items-center gap-2">
             <Plus size={15} /> New Goal
           </button>
@@ -197,7 +197,7 @@ export default function Goals() {
             if (editing?.id === goal.id) {
               return (
                 <div key={goal.id} className="card md:col-span-2">
-                  <h2 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">Edit Goal</h2>
+                  <h2 className="text-base font-semibold text-neutral-700 dark:text-neutral-200 mb-4">Edit Goal</h2>
                   <GoalForm
                     initial={{
                       name: goal.name,
@@ -219,7 +219,7 @@ export default function Goals() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-slate-800 dark:text-slate-100 truncate">{goal.name}</h3>
+                      <h3 className="font-semibold text-neutral-800 dark:text-neutral-100 truncate">{goal.name}</h3>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[goal.type]}`}>
                         {GOAL_TYPES.find(t => t.value === goal.type)?.label}
                       </span>
@@ -229,20 +229,20 @@ export default function Goals() {
                         </span>
                       )}
                     </div>
-                    {goal.notes && <p className="text-xs text-slate-400 mt-0.5 truncate">{goal.notes}</p>}
+                    {goal.notes && <p className="text-xs text-neutral-400 mt-0.5 truncate">{goal.notes}</p>}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => setEditing(goal)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                    <button onClick={() => setEditing(goal)} className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
                       <Pencil size={14} />
                     </button>
-                    <button onClick={() => handleDelete(goal.id)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                    <button onClick={() => handleDelete(goal.id)} className="p-1.5 rounded-lg text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mb-1.5">
+                  <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1.5">
                     <span>{formatPHP(goal.currentAmount)} saved</span>
                     <span>{formatPercent(percent)} of {formatPHP(goal.targetAmount)}</span>
                   </div>
@@ -250,7 +250,7 @@ export default function Goals() {
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-xs text-slate-400 dark:text-slate-500">
+                  <div className="text-xs text-neutral-400 dark:text-neutral-500">
                     {goal.deadline ? (
                       days === null ? null : days < 0
                         ? <span className="text-red-500">Overdue by {Math.abs(days)} days</span>
@@ -264,7 +264,7 @@ export default function Goals() {
 
                   {progressEdit === goal.id ? (
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-slate-400">₱</span>
+                      <span className="text-xs text-neutral-400">₱</span>
                       <input
                         type="number"
                         min="0"
@@ -277,7 +277,7 @@ export default function Goals() {
                       <button onClick={() => saveProgress(goal)} className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors">
                         <Check size={14} />
                       </button>
-                      <button onClick={() => setProgressEdit(null)} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                      <button onClick={() => setProgressEdit(null)} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
                         <X size={14} />
                       </button>
                     </div>

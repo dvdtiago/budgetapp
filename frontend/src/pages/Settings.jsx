@@ -61,34 +61,34 @@ export default function Settings() {
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-slate-400">Loading…</div>;
+  if (loading) return <div className="flex items-center justify-center h-64 text-neutral-400">Loading…</div>;
 
   const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   return (
     <div className="space-y-6 max-w-lg">
       <div>
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">Settings</h1>
-        <p className="text-sm text-slate-400">Manage your account and preferences</p>
+        <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Settings</h1>
+        <p className="text-sm text-neutral-400">Manage your account and preferences</p>
       </div>
 
       <form onSubmit={saveSettings} className="space-y-6">
         {/* Profile */}
         <div className="card space-y-4">
-          <h2 className="font-semibold text-slate-800">Profile</h2>
+          <h2 className="font-semibold text-neutral-800">Profile</h2>
           <div>
             <label className="label">Your name</label>
             <input className="input" value={settings.user?.name || ''} onChange={e => set('user', { ...settings.user, name: e.target.value })} required />
           </div>
           <div>
             <label className="label">Email</label>
-            <input className="input bg-slate-50 dark:bg-slate-700/50 text-slate-400 cursor-not-allowed" value={settings.user?.email || ''} disabled />
+            <input className="input bg-neutral-50 dark:bg-neutral-700/50 text-neutral-400 cursor-not-allowed" value={settings.user?.email || ''} disabled />
           </div>
         </div>
 
         {/* Goal */}
         <div className="card space-y-4">
-          <h2 className="font-semibold text-slate-800">Debt Payoff Goal</h2>
+          <h2 className="font-semibold text-neutral-800">Debt Payoff Goal</h2>
           <div>
             <label className="label">Target date to be debt-free</label>
             <input
@@ -97,13 +97,13 @@ export default function Settings() {
               value={settings.goalDate ? new Date(settings.goalDate).toISOString().slice(0, 10) : ''}
               onChange={e => set('goalDate', e.target.value)}
             />
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">This is used to calculate whether you're on track on the dashboard.</p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">This is used to calculate whether you're on track on the dashboard.</p>
           </div>
         </div>
 
         {/* Email reminders */}
         <div className="card space-y-4">
-          <h2 className="font-semibold text-slate-800">Email Reminders</h2>
+          <h2 className="font-semibold text-neutral-800">Email Reminders</h2>
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -111,7 +111,7 @@ export default function Settings() {
               onChange={e => set('reminderEnabled', e.target.checked)}
               className="w-4 h-4 accent-brand-600"
             />
-            <span className="text-sm text-slate-700 dark:text-slate-300">Send me reminders to log my finances</span>
+            <span className="text-sm text-neutral-700 dark:text-neutral-300">Send me reminders to log my finances</span>
           </label>
 
           {settings.reminderEnabled && (
@@ -152,7 +152,7 @@ export default function Settings() {
 
       {/* Change password */}
       <form onSubmit={changePassword} className="card space-y-4">
-        <h2 className="font-semibold text-slate-800">Change Password</h2>
+        <h2 className="font-semibold text-neutral-800">Change Password</h2>
         {pwError && <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm px-3 py-2 rounded-lg">{pwError}</div>}
         {pwSaved && <div className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm px-3 py-2 rounded-lg">Password updated successfully.</div>}
         <div>

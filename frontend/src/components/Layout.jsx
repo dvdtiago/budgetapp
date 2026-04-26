@@ -8,14 +8,14 @@ import { useMonth } from '../lib/MonthContext.jsx';
 import { formatMonthLabel } from '../lib/utils.js';
 
 const nav = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/debts', label: 'Debts', icon: CreditCard },
-  { to: '/income', label: 'Income', icon: Wallet },
-  { to: '/budget', label: 'Budget', icon: BarChart2 },
+  { to: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard },
+  { to: '/debts',        label: 'Debts',        icon: CreditCard },
+  { to: '/income',       label: 'Income',       icon: Wallet },
+  { to: '/budget',       label: 'Budget',       icon: BarChart2 },
   { to: '/transactions', label: 'Transactions', icon: List },
-  { to: '/goals', label: 'Goals', icon: Target },
-  { to: '/trends', label: 'Trends', icon: TrendingUp },
-  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/goals',        label: 'Goals',        icon: Target },
+  { to: '/trends',       label: 'Trends',       icon: TrendingUp },
+  { to: '/settings',     label: 'Settings',     icon: Settings },
 ];
 
 function useDarkMode() {
@@ -50,16 +50,22 @@ function MonthStepper() {
 
   return (
     <div className="flex items-center gap-1">
-      <button onClick={() => step(-1)} className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <button
+        onClick={() => step(-1)}
+        className="p-1.5 rounded-md text-neutral-400 dark:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+      >
         <ChevronLeft size={16} />
       </button>
       <input
         type="month"
         value={month}
         onChange={e => setMonth(e.target.value)}
-        className="text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent border-none outline-none cursor-pointer w-32 text-center"
+        className="text-sm font-semibold text-neutral-700 dark:text-neutral-200 bg-transparent border-none outline-none cursor-pointer w-32 text-center"
       />
-      <button onClick={() => step(1)} className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+      <button
+        onClick={() => step(1)}
+        className="p-1.5 rounded-md text-neutral-400 dark:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+      >
         <ChevronRight size={16} />
       </button>
     </div>
@@ -86,10 +92,10 @@ export default function Layout() {
           to={to}
           onClick={onClick}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+            `flex items-center gap-2.5 px-3 py-2 rounded-md text-[13.5px] font-medium transition-all duration-100 ${
               isActive
-                ? 'bg-brand-50 dark:bg-brand-700/30 text-brand-700 dark:text-brand-300'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 font-semibold'
+                : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-700/50'
             }`
           }
         >
@@ -104,14 +110,14 @@ export default function Layout() {
     <div className="flex flex-col gap-1">
       <button
         onClick={() => setDark(d => !d)}
-        className="flex items-center gap-3 px-3 py-2 w-full rounded-xl text-sm text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+        className="flex items-center gap-2.5 px-3 py-2 w-full rounded-md text-[13.5px] text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors"
       >
         {dark ? <Sun size={17} /> : <Moon size={17} />}
         {dark ? 'Light mode' : 'Dark mode'}
       </button>
       <button
         onClick={logout}
-        className="flex items-center gap-3 px-3 py-2 w-full rounded-xl text-sm text-slate-400 dark:text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        className="flex items-center gap-2.5 px-3 py-2 w-full rounded-md text-[13.5px] text-neutral-400 dark:text-neutral-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
       >
         <LogOut size={17} />
         Sign out
@@ -120,30 +126,44 @@ export default function Layout() {
   );
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen flex bg-neutral-50 dark:bg-neutral-900">
+
       {/* Sidebar – desktop */}
-      <aside className="hidden md:flex flex-col w-56 bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800 fixed inset-y-0 left-0 z-20">
-        <div className="px-5 py-5 border-b border-slate-100 dark:border-slate-800">
-          <span className="text-lg font-bold text-brand-600">💰 BudgetApp</span>
-          <p className="text-xs text-slate-400 mt-0.5 truncate">{user.name}</p>
+      <aside className="hidden md:flex flex-col w-56 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 fixed inset-y-0 left-0 z-20">
+        <div className="px-5 py-5 border-b border-neutral-200 dark:border-neutral-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-[10px] bg-brand-500 flex items-center justify-center flex-shrink-0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </div>
+            <span className="font-display text-[17px] font-medium tracking-tight text-neutral-800 dark:text-neutral-100">
+              budget<span className="text-brand-500">app</span>
+            </span>
+          </div>
+          <p className="text-xs text-neutral-400 mt-1.5 truncate">{user.name}</p>
         </div>
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           <NavItems />
         </nav>
-        <div className="px-3 py-4 border-t border-slate-100 dark:border-slate-800 space-y-1">
+        <div className="px-3 py-4 border-t border-neutral-200 dark:border-neutral-800 space-y-0.5">
           <BottomActions />
         </div>
       </aside>
 
       {/* Mobile + desktop top bar */}
-      <header className="fixed top-0 inset-x-0 z-30 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-4 h-14 md:pl-60">
-        {/* Left: hamburger on mobile */}
-        <button onClick={() => setOpen(o => !o)} className="md:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400">
+      <header className="fixed top-0 inset-x-0 z-30 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between px-4 h-14 md:pl-60">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="md:hidden p-2 rounded-md text-neutral-500 dark:text-neutral-400"
+        >
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <span className="md:hidden text-base font-bold text-brand-600">💰 BudgetApp</span>
+        <span className="md:hidden font-display text-base font-medium text-neutral-800 dark:text-neutral-100">
+          budget<span className="text-brand-500">app</span>
+        </span>
 
-        {/* Month stepper — center on desktop, right on mobile */}
         <div className="hidden md:flex flex-1 justify-start">
           <MonthStepper />
         </div>
@@ -154,7 +174,7 @@ export default function Layout() {
           </div>
           <button
             onClick={() => setDark(d => !d)}
-            className="p-2 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-md text-neutral-400 dark:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -166,13 +186,13 @@ export default function Layout() {
         <div className="md:hidden fixed inset-0 z-20" onClick={() => setOpen(false)}>
           <div className="absolute inset-0 bg-black/20 dark:bg-black/50" />
           <aside
-            className="absolute left-0 top-14 bottom-0 w-56 bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800 flex flex-col"
+            className="absolute left-0 top-14 bottom-0 w-56 bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 flex flex-col"
             onClick={e => e.stopPropagation()}
           >
-            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
               <NavItems onClick={() => setOpen(false)} />
             </nav>
-            <div className="px-3 py-4 border-t border-slate-100 dark:border-slate-800 space-y-1">
+            <div className="px-3 py-4 border-t border-neutral-200 dark:border-neutral-800 space-y-0.5">
               <BottomActions />
             </div>
           </aside>
@@ -181,7 +201,7 @@ export default function Layout() {
 
       {/* Main content */}
       <main className="flex-1 md:ml-56 pt-14 min-h-screen">
-        <div className="max-w-5xl mx-auto px-4 py-6">
+        <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-6">
           <Outlet />
         </div>
       </main>
