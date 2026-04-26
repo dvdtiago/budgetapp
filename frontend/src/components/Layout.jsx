@@ -188,9 +188,7 @@ export default function Layout() {
         {/* Mobile: logo left, month centered absolutely, nothing right */}
         <div className="md:hidden relative flex items-center h-full px-4">
           <Logo />
-
-            <MonthStepper />
-          </div>
+          <MonthStepper />
         </div>
       </header>
 
