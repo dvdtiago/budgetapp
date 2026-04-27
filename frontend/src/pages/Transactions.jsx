@@ -254,43 +254,44 @@ export default function Transactions() {
             <p className="text-xs mt-1">Use "+ Add entry" above to log an expense or debt payment.</p>
           </div>
         ) : filtered.map(entry => (
-          <div key={`${entry._type}-${entry.id}`} className="flex items-center gap-3 px-4 py-3.5">
-            <div className="flex-1 min-w-0">
-              <div className="mb-1.5">
-                {entry._type === 'expense' ? (
-                  <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
-                    <ShoppingBag size={11} />
-                    {entry.category?.name || 'Expense'}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
-                    <CreditCard size={11} />
-                    {entry.debtName}
-                  </span>
-                )}
-              </div>
+          <div key={`${entry._type}-${entry.id}`} className="px-4 py-3.5">
+            {/* Row 1: badge + amount */}
+            <div className="flex items-center justify-between gap-3">
+              {entry._type === 'expense' ? (
+                <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
+                  <ShoppingBag size={11} />
+                  {entry.category?.name || 'Expense'}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
+                  <CreditCard size={11} />
+                  {entry.debtName}
+                </span>
+              )}
+              <span className={`text-sm font-semibold shrink-0 ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
+                {formatPHP(entry.amount)}
+              </span>
+            </div>
+            {/* Row 2: description + date */}
+            <div className="flex items-center justify-between gap-3 mt-1">
               <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate">
                 {entry._type === 'expense'
                   ? (entry.description || entry.category?.name || 'Expense')
                   : (entry.notes || 'Debt payment')}
               </p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500 shrink-0">{formatDate(entry.date)}</p>
             </div>
-            <div className="text-right shrink-0">
-              <p className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
-                {formatPHP(entry.amount)}
-              </p>
-              <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">{formatDate(entry.date)}</p>
-              {entry._type === 'expense' && (
-                <div className="flex items-center justify-end gap-1 mt-1">
-                  <button onClick={() => setEditingTx(entry)} className="p-1 rounded text-neutral-300 hover:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                    <Pencil size={12} />
-                  </button>
-                  <button onClick={() => deleteTx(entry.id)} className="p-1 rounded text-neutral-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Row 3: actions */}
+            {entry._type === 'expense' && (
+              <div className="flex items-center gap-2 mt-2">
+                <button onClick={() => setEditingTx(entry)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                  <Pencil size={14} /> Edit
+                </button>
+                <button onClick={() => deleteTx(entry.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                  <Trash2 size={14} /> Delete
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
