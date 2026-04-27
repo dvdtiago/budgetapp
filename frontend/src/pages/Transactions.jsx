@@ -138,14 +138,8 @@ export default function Transactions() {
     }
   }
 
-  const allEntries = [
-    ...transactions,
-    ...debtPayments,
-  ].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  const filtered = filter === 'expenses' ? transactions
-    : filter === 'payments' ? debtPayments
-    : allEntries;
+  const allEntries = [...transactions, ...debtPayments].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const filtered = filter === 'expenses' ? transactions : filter === 'payments' ? debtPayments : allEntries;
 
   const totalExpenses = transactions.reduce((s, t) => s + Number(t.amount), 0);
   const totalPayments = debtPayments.reduce((s, p) => s + Number(p.amount), 0);
@@ -153,34 +147,20 @@ export default function Transactions() {
   if (loading) return <div className="flex items-center justify-center h-64 text-neutral-400">Loading…</div>;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Transactions</h1>
-        <p className="text-sm text-neutral-400 dark:text-neutral-500">All expenses and debt payments in one view</p>
-      </div>
-
-      {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="card text-center">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Expenses</p>
-          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalExpenses)}</p>
-          <p className="text-xs text-neutral-400 dark:text-neutral-500">{transactions.length} entries</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Debt payments</p>
-          <p className="text-lg font-bold text-brand-600">{formatPHP(totalPayments)}</p>
-          <p className="text-xs text-neutral-400 dark:text-neutral-500">{debtPayments.length} entries</p>
-        </div>
-        <div className="card text-center">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Total out</p>
-          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalExpenses + totalPayments)}</p>
-          <p className="text-xs text-neutral-400 dark:text-neutral-500">{allEntries.length} entries</p>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Transactions</h1>
+          <p className="text-sm text-neutral-400 dark:text-neutral-500">
+            {formatPHP(totalExpenses)} expenses · {formatPHP(totalPayments)} debt payments · {formatPHP(totalExpenses + totalPayments)} total out
+          </p>
         </div>
       </div>
 
       {/* Filter tabs + add button */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {[['all', 'All'], ['expenses', 'Expenses'], ['payments', 'Debt Payments']].map(([val, label]) => (
             <button
               key={val}
@@ -195,131 +175,147 @@ export default function Transactions() {
             </button>
           ))}
         </div>
-        <button
-          onClick={() => { setAddingRow(true); setNewRow({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' }); }}
-          className="btn-primary text-sm"
-        >
-          <Plus size={14} /> Add entry
-        </button>
+        {!addingRow && (
+          <button
+            onClick={() => {
+              setNewRow({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
+              setAddingRow(true);
+            }}
+            className="btn-primary text-sm shrink-0"
+          >
+            <Plus size={14} /> Add entry
+          </button>
+        )}
       </div>
 
-      {/* Table */}
-      {filtered.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="text-3xl mb-3">📋</p>
-          <p className="font-medium text-neutral-800 dark:text-neutral-100">No entries yet</p>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500 mt-1">Log expenses on the Budget page or payments on the Debts page.</p>
-        </div>
-      ) : (
-        <div className="card p-0 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-neutral-100 dark:border-neutral-700">
-                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Type</th>
-                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Description</th>
-                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 hidden sm:table-cell">Date</th>
-                <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Amount</th>
-                <th className="px-4 py-3 w-16"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {addingRow && (
-                <tr className="border-b border-brand-100 dark:border-brand-900/40 bg-brand-50/50 dark:bg-brand-900/10">
-                  <td className="px-3 py-2">
-                    <select
-                      className="input py-1 text-xs"
-                      value={newRow.type}
-                      onChange={e => setNewRow(r => ({ ...r, type: e.target.value, categoryId: '', debtId: '' }))}
-                    >
-                      <option value="expense">Expense</option>
-                      <option value="payment">Debt Payment</option>
+      {/* Table — always visible */}
+      <div className="card p-0 overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-neutral-100 dark:border-neutral-700">
+              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Type</th>
+              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Description</th>
+              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 hidden sm:table-cell">Date</th>
+              <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Amount</th>
+              <th className="px-4 py-3 w-16"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Inline add row */}
+            {addingRow && (
+              <tr className="border-b border-brand-100 dark:border-brand-900/40 bg-brand-50/40 dark:bg-brand-900/10">
+                <td className="px-3 py-2">
+                  <select
+                    className="input py-1 text-xs"
+                    value={newRow.type}
+                    onChange={e => setNewRow(r => ({ ...r, type: e.target.value, categoryId: '', debtId: '' }))}
+                  >
+                    <option value="expense">Expense</option>
+                    <option value="payment">Debt Payment</option>
+                  </select>
+                </td>
+                <td className="px-3 py-2">
+                  {newRow.type === 'expense' ? (
+                    <select className="input py-1 text-xs" value={newRow.categoryId} onChange={e => setNewRow(r => ({ ...r, categoryId: e.target.value }))}>
+                      <option value="">— Category —</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                     </select>
-                  </td>
-                  <td className="px-3 py-2">
-                    {newRow.type === 'expense' ? (
-                      <select className="input py-1 text-xs" value={newRow.categoryId} onChange={e => setNewRow(r => ({ ...r, categoryId: e.target.value }))}>
-                        <option value="">— Category —</option>
-                        {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-                      </select>
-                    ) : (
-                      <select className="input py-1 text-xs" value={newRow.debtId} onChange={e => setNewRow(r => ({ ...r, debtId: e.target.value }))} required>
-                        <option value="">— Debt —</option>
-                        {debts.filter(d => d.status === 'ACTIVE').map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                      </select>
-                    )}
-                  </td>
-                  <td className="px-3 py-2 hidden sm:table-cell">
-                    <input className="input py-1 text-xs" type="date" value={newRow.date} onChange={e => setNewRow(r => ({ ...r, date: e.target.value }))} required />
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <input className="input py-1 text-xs text-right w-28" type="number" min="0" step="0.01" placeholder="0.00" value={newRow.amount} onChange={e => setNewRow(r => ({ ...r, amount: e.target.value }))} required />
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={saveNewRow}
-                        disabled={savingRow || !newRow.amount || (newRow.type === 'payment' && !newRow.debtId)}
-                        className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 disabled:opacity-40"
-                      >
-                        <Check size={14} />
-                      </button>
-                      <button onClick={() => setAddingRow(false)} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-              {filtered.map(entry => (
-                <tr key={`${entry._type}-${entry.id}`} className="border-b border-neutral-50 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                  <td className="px-4 py-3">
-                    {entry._type === 'expense' ? (
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
-                        <ShoppingBag size={11} />
-                        {entry.category?.name || 'Expense'}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
-                        <CreditCard size={11} />
-                        {entry.debtName}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate max-w-[160px]">
-                      {entry._type === 'expense'
-                        ? (entry.description || entry.category?.name || 'Expense')
-                        : (entry.notes || 'Debt payment')}
-                    </p>
-                  </td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <p className="text-sm text-neutral-400 dark:text-neutral-500">{formatDate(entry.date)}</p>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
-                      {formatPHP(entry.amount)}
+                  ) : (
+                    <select className="input py-1 text-xs" value={newRow.debtId} onChange={e => setNewRow(r => ({ ...r, debtId: e.target.value }))}>
+                      <option value="">— Debt —</option>
+                      {debts.filter(d => d.status === 'ACTIVE').map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  )}
+                </td>
+                <td className="px-3 py-2 hidden sm:table-cell">
+                  <input className="input py-1 text-xs" type="date" value={newRow.date} onChange={e => setNewRow(r => ({ ...r, date: e.target.value }))} required />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <input
+                    className="input py-1 text-xs text-right w-28"
+                    type="number" min="0" step="0.01" placeholder="0.00"
+                    value={newRow.amount}
+                    onChange={e => setNewRow(r => ({ ...r, amount: e.target.value }))}
+                    required
+                  />
+                </td>
+                <td className="px-3 py-2">
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={saveNewRow}
+                      disabled={savingRow || !newRow.amount || (newRow.type === 'payment' && !newRow.debtId)}
+                      className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 disabled:opacity-40"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button onClick={() => setAddingRow(false)} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                      <X size={14} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )}
+
+            {/* Entries */}
+            {filtered.map(entry => (
+              <tr key={`${entry._type}-${entry.id}`} className="border-b border-neutral-50 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                <td className="px-4 py-3">
+                  {entry._type === 'expense' ? (
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
+                      <ShoppingBag size={11} />
+                      {entry.category?.name || 'Expense'}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      {entry._type === 'expense' && (
-                        <button onClick={() => setEditingTx(entry)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                          <Pencil size={13} />
-                        </button>
-                      )}
-                      {entry._type === 'expense' && (
-                        <button onClick={() => deleteTx(entry.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-                          <Trash2 size={13} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
+                      <CreditCard size={11} />
+                      {entry.debtName}
+                    </span>
+                  )}
+                </td>
+                <td className="px-4 py-3">
+                  <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate max-w-[160px]">
+                    {entry._type === 'expense'
+                      ? (entry.description || entry.category?.name || 'Expense')
+                      : (entry.notes || 'Debt payment')}
+                  </p>
+                </td>
+                <td className="px-4 py-3 hidden sm:table-cell">
+                  <p className="text-sm text-neutral-400 dark:text-neutral-500">{formatDate(entry.date)}</p>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <span className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
+                    {formatPHP(entry.amount)}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-1">
+                    {entry._type === 'expense' && (
+                      <button onClick={() => setEditingTx(entry)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                        <Pencil size={13} />
+                      </button>
+                    )}
+                    {entry._type === 'expense' && (
+                      <button onClick={() => deleteTx(entry.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                        <Trash2 size={13} />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+
+            {/* Empty state inside table */}
+            {filtered.length === 0 && !addingRow && (
+              <tr>
+                <td colSpan={5} className="text-center py-12 text-neutral-400 dark:text-neutral-500">
+                  <p className="text-sm font-medium">No entries yet</p>
+                  <p className="text-xs mt-1">Click "+ Add entry" above to log an expense or debt payment.</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {editingTx && (
         <EditTransactionModal

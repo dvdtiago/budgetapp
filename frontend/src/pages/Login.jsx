@@ -36,8 +36,8 @@ export default function Login() {
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
           </div>
-          <h1 className="font-display text-4xl font-medium text-neutral-800 dark:text-neutral-100 tracking-tight">
-            budgetapp
+          <h1 className="font-display text-4xl font-medium tracking-tight">
+            <span className="text-brand-500">budget</span><span className="text-neutral-800 dark:text-neutral-100">arian</span>
           </h1>
           <p className="text-neutral-400 dark:text-neutral-500 text-sm mt-2">
             Your personal money companion

@@ -98,8 +98,8 @@ function Logo() {
           <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       </div>
-      <span className="font-display text-[17px] font-medium tracking-tight text-neutral-800 dark:text-neutral-100">
-        budgetar<span className="text-brand-500">ian</span>
+      <span className="font-display text-[17px] font-medium tracking-tight">
+        <span className="text-brand-500">budget</span><span className="text-neutral-800 dark:text-neutral-100">arian</span>
       </span>
     </div>
   );

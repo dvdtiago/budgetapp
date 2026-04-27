@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingDown, TrendingUp, Wallet, Target, ChevronRight, Plus, CalendarClock, AlertCircle } from 'lucide-react';
+import { TrendingDown, TrendingUp, Wallet, Target, ChevronRight, Plus, CalendarClock, AlertCircle, ShoppingBag, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../lib/api.js';
 import { formatPHP, formatDate, formatPercent, debtTypeLabel } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
+import SurplusModal from '../components/SurplusModal.jsx';
 
 function StatCard({ label, value, sub, color = 'text-neutral-800 dark:text-neutral-100', icon }) {
   return (
@@ -33,14 +34,20 @@ function ProgressBar({ percent, color = 'bg-brand-600' }) {
 export default function Dashboard() {
   const { month } = useMonth();
   const [data, setData] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showSurplus, setShowSurplus] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     setLoading(true);
-    api.get('/dashboard', { params: { month } })
-      .then(r => setData(r.data))
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.get('/dashboard', { params: { month } }),
+      api.get('/budget/categories'),
+    ]).then(([dash, cats]) => {
+      setData(dash.data);
+      setCategories(cats.data);
+    }).finally(() => setLoading(false));
   }, [month]);
 
   if (loading) return <div className="flex items-center justify-center h-64 text-neutral-400">Loading…</div>;
@@ -53,11 +60,19 @@ export default function Dashboard() {
     return 'Good evening';
   })();
 
+  const totalAllocated = categories.reduce((s, c) => s + Number(c.monthlyAllocation), 0);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">{greeting}, {user.name?.split(' ')[0]} 👋</h1>
-        <p className="text-sm text-neutral-400 dark:text-neutral-500">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">{greeting}, {user.name?.split(' ')[0]} 👋</h1>
+          <p className="text-sm text-neutral-400 dark:text-neutral-500">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
+        </div>
+        <button onClick={() => setShowSurplus(true)} className="btn-primary shrink-0">
+          <Target size={15} />
+          Allocate Surplus
+        </button>
       </div>
 
       {/* Stat cards */}
@@ -170,8 +185,9 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Priority Debts + Budget Overview */}
       <div className="grid md:grid-cols-2 gap-4">
-        {/* Top debts */}
+        {/* Priority Debts */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Priority Debts</h2>
@@ -205,38 +221,103 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Recent transactions */}
+        {/* Budget Overview */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Recent Expenses</h2>
-            <Link to="/transactions" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
+            <div>
+              <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Budget Overview</h2>
+              {totalAllocated > 0 && (
+                <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">{formatPHP(thisMonth.spent)} of {formatPHP(totalAllocated)} spent</p>
+              )}
+            </div>
+            <Link to="/budget" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
               View all <ChevronRight size={13} />
             </Link>
           </div>
-          {recentTransactions.length === 0 ? (
+          {categories.length === 0 ? (
             <div className="text-center py-6 text-neutral-400">
-              <p className="text-sm">No expenses logged yet.</p>
-              <Link to="/budget" className="btn-primary mt-3 text-xs inline-flex"><Plus size={13} /> Log an expense</Link>
+              <p className="text-sm">No budget categories yet.</p>
+              <Link to="/budget" className="btn-primary mt-3 text-xs inline-flex"><Plus size={13} /> Set up budget</Link>
             </div>
           ) : (
             <div className="space-y-3">
-              {recentTransactions.map(tx => (
-                <div key={tx.id} className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-base">{tx.category?.icon ?? '📦'}</span>
-                    <div className="min-w-0">
-                      <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate">{tx.description || tx.category?.name || 'Expense'}</p>
-                      <p className="text-xs text-neutral-400 dark:text-neutral-500">{formatDate(tx.date)}</p>
+              {categories.slice(0, 5).map(cat => {
+                const pct = Number(cat.monthlyAllocation) > 0
+                  ? Math.min(100, (thisMonth.spent / totalAllocated) * 100)
+                  : 0;
+                return (
+                  <div key={cat.id}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300 truncate">
+                        {cat.icon} {cat.name}
+                      </span>
+                      <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400 shrink-0 ml-2">
+                        {formatPHP(cat.monthlyAllocation)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-1.5">
+                      <div className="bg-brand-400 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
-                  <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100 shrink-0">{formatPHP(tx.amount)}</span>
-                </div>
-              ))}
+                );
+              })}
+              {categories.length > 5 && (
+                <p className="text-xs text-neutral-400 dark:text-neutral-500 pt-1">+{categories.length - 5} more categories</p>
+              )}
             </div>
           )}
         </div>
       </div>
 
+      {/* Recent Transactions — full width */}
+      <div className="card p-0 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 dark:border-neutral-700">
+          <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Recent Transactions</h2>
+          <Link to="/transactions" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
+            View all <ChevronRight size={13} />
+          </Link>
+        </div>
+        {recentTransactions.length === 0 ? (
+          <div className="text-center py-10 text-neutral-400">
+            <p className="text-sm">No expenses logged yet.</p>
+            <Link to="/transactions" className="btn-primary mt-3 text-xs inline-flex"><Plus size={13} /> Log an expense</Link>
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-neutral-100 dark:border-neutral-700">
+                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-2">Category</th>
+                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-2 hidden sm:table-cell">Description</th>
+                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-2 hidden sm:table-cell">Date</th>
+                <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-2">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentTransactions.map(tx => (
+                <tr key={tx.id} className="border-b border-neutral-50 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                  <td className="px-4 py-2.5">
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
+                      <ShoppingBag size={11} />
+                      {tx.category?.name || 'Expense'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 hidden sm:table-cell">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300 truncate max-w-[180px]">{tx.description || tx.category?.name || 'Expense'}</p>
+                  </td>
+                  <td className="px-4 py-2.5 hidden sm:table-cell">
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">{formatDate(tx.date)}</p>
+                  </td>
+                  <td className="px-4 py-2.5 text-right">
+                    <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">{formatPHP(tx.amount)}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {showSurplus && <SurplusModal month={month} onClose={() => setShowSurplus(false)} />}
     </div>
   );
 }
