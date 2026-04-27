@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Trash2, Pencil, X, CreditCard, ShoppingBag, Plus, Check } from 'lucide-react';
+import { Trash2, Pencil, X, CreditCard, ShoppingBag, Plus } from 'lucide-react';
 import api from '../lib/api.js';
 import { formatPHP, formatDate } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
@@ -66,9 +66,9 @@ export default function Transactions() {
   const [loading, setLoading] = useState(true);
   const [editingTx, setEditingTx] = useState(null);
   const [filter, setFilter] = useState('all');
-  const [addingRow, setAddingRow] = useState(false);
-  const [newRow, setNewRow] = useState({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
-  const [savingRow, setSavingRow] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [newEntry, setNewEntry] = useState({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
+  const [saving, setSaving] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -112,29 +112,29 @@ export default function Transactions() {
     load();
   }
 
-  async function saveNewRow(e) {
+  async function submitNewEntry(e) {
     e.preventDefault();
-    setSavingRow(true);
+    setSaving(true);
     try {
-      if (newRow.type === 'expense') {
+      if (newEntry.type === 'expense') {
         await api.post('/transactions', {
-          categoryId: newRow.categoryId || null,
-          amount: newRow.amount,
-          description: newRow.description,
-          date: newRow.date,
+          categoryId: newEntry.categoryId || null,
+          amount: newEntry.amount,
+          description: newEntry.description,
+          date: newEntry.date,
         });
       } else {
-        await api.post(`/debts/${newRow.debtId}/payment`, {
-          amount: newRow.amount,
-          date: newRow.date,
-          notes: newRow.description,
+        await api.post(`/debts/${newEntry.debtId}/payment`, {
+          amount: newEntry.amount,
+          date: newEntry.date,
+          notes: newEntry.description,
         });
       }
-      setNewRow({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
-      setAddingRow(false);
+      setNewEntry({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
+      setShowForm(false);
       load();
     } finally {
-      setSavingRow(false);
+      setSaving(false);
     }
   }
 
@@ -149,46 +149,104 @@ export default function Transactions() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Transactions</h1>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500">
-            {formatPHP(totalExpenses)} expenses · {formatPHP(totalPayments)} debt payments · {formatPHP(totalExpenses + totalPayments)} total out
-          </p>
-        </div>
+      <div>
+        <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Transactions</h1>
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">
+          {formatPHP(totalExpenses)} expenses · {formatPHP(totalPayments)} debt payments · {formatPHP(totalExpenses + totalPayments)} total out
+        </p>
+        <button
+          onClick={() => { setShowForm(s => !s); setNewEntry({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' }); }}
+          className="btn-primary mt-3"
+        >
+          <Plus size={15} /> Add entry
+        </button>
       </div>
 
-      {/* Filter tabs + add button */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex gap-2 flex-wrap">
-          {[['all', 'All'], ['expenses', 'Expenses'], ['payments', 'Debt Payments']].map(([val, label]) => (
-            <button
-              key={val}
-              onClick={() => setFilter(val)}
-              className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
-                filter === val
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+      {/* Add entry form */}
+      {showForm && (
+        <div className="card">
+          <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 mb-4">New entry</h2>
+          <form onSubmit={submitNewEntry} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">Type</label>
+                <select
+                  className="input"
+                  value={newEntry.type}
+                  onChange={e => setNewEntry(r => ({ ...r, type: e.target.value, categoryId: '', debtId: '' }))}
+                >
+                  <option value="expense">Expense</option>
+                  <option value="payment">Debt Payment</option>
+                </select>
+              </div>
+              <div>
+                {newEntry.type === 'expense' ? (
+                  <>
+                    <label className="label">Category</label>
+                    <select className="input" value={newEntry.categoryId} onChange={e => setNewEntry(r => ({ ...r, categoryId: e.target.value }))}>
+                      <option value="">— No category —</option>
+                      {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <label className="label">Debt</label>
+                    <select className="input" value={newEntry.debtId} onChange={e => setNewEntry(r => ({ ...r, debtId: e.target.value }))} required>
+                      <option value="">— Select debt —</option>
+                      {debts.filter(d => d.status === 'ACTIVE').map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">Amount (₱)</label>
+                <input
+                  className="input"
+                  type="number" min="0" step="0.01" placeholder="0.00"
+                  value={newEntry.amount}
+                  onChange={e => setNewEntry(r => ({ ...r, amount: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">Date</label>
+                <input className="input" type="date" value={newEntry.date} onChange={e => setNewEntry(r => ({ ...r, date: e.target.value }))} required />
+              </div>
+            </div>
+            <div>
+              <label className="label">Description (optional)</label>
+              <input className="input" placeholder="e.g. Grocery run" value={newEntry.description} onChange={e => setNewEntry(r => ({ ...r, description: e.target.value }))} />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary flex-1">Cancel</button>
+              <button type="submit" disabled={saving} className="btn-primary flex-1">
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
         </div>
-        {!addingRow && (
+      )}
+
+      {/* Filter tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {[['all', 'All'], ['expenses', 'Expenses'], ['payments', 'Debt Payments']].map(([val, label]) => (
           <button
-            onClick={() => {
-              setNewRow({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
-              setAddingRow(true);
-            }}
-            className="btn-primary text-sm shrink-0"
+            key={val}
+            onClick={() => setFilter(val)}
+            className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
+              filter === val
+                ? 'bg-brand-600 text-white'
+                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+            }`}
           >
-            <Plus size={14} /> Add entry
+            {label}
           </button>
-        )}
+        ))}
       </div>
 
-      {/* Table — always visible */}
+      {/* Table */}
       <div className="card p-0 overflow-hidden">
         <table className="w-full">
           <thead>
@@ -197,121 +255,73 @@ export default function Transactions() {
               <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Description</th>
               <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 hidden sm:table-cell">Date</th>
               <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Amount</th>
-              <th className="px-4 py-3 w-16"></th>
+              <th className="px-4 py-3 w-16 hidden sm:table-cell"></th>
             </tr>
           </thead>
           <tbody>
-            {/* Inline add row */}
-            {addingRow && (
-              <tr className="border-b border-brand-100 dark:border-brand-900/40 bg-brand-50/40 dark:bg-brand-900/10">
-                <td className="px-3 py-2">
-                  <select
-                    className="input py-1 text-xs"
-                    value={newRow.type}
-                    onChange={e => setNewRow(r => ({ ...r, type: e.target.value, categoryId: '', debtId: '' }))}
-                  >
-                    <option value="expense">Expense</option>
-                    <option value="payment">Debt Payment</option>
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  {newRow.type === 'expense' ? (
-                    <select className="input py-1 text-xs" value={newRow.categoryId} onChange={e => setNewRow(r => ({ ...r, categoryId: e.target.value }))}>
-                      <option value="">— Category —</option>
-                      {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-                    </select>
-                  ) : (
-                    <select className="input py-1 text-xs" value={newRow.debtId} onChange={e => setNewRow(r => ({ ...r, debtId: e.target.value }))}>
-                      <option value="">— Debt —</option>
-                      {debts.filter(d => d.status === 'ACTIVE').map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
-                  )}
-                </td>
-                <td className="px-3 py-2 hidden sm:table-cell">
-                  <input className="input py-1 text-xs" type="date" value={newRow.date} onChange={e => setNewRow(r => ({ ...r, date: e.target.value }))} required />
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <input
-                    className="input py-1 text-xs text-right w-28"
-                    type="number" min="0" step="0.01" placeholder="0.00"
-                    value={newRow.amount}
-                    onChange={e => setNewRow(r => ({ ...r, amount: e.target.value }))}
-                    required
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex items-center justify-end gap-1">
-                    <button
-                      onClick={saveNewRow}
-                      disabled={savingRow || !newRow.amount || (newRow.type === 'payment' && !newRow.debtId)}
-                      className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 disabled:opacity-40"
-                    >
-                      <Check size={14} />
-                    </button>
-                    <button onClick={() => setAddingRow(false)} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                      <X size={14} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            )}
-
-            {/* Entries */}
-            {filtered.map(entry => (
-              <tr key={`${entry._type}-${entry.id}`} className="border-b border-neutral-50 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                <td className="px-4 py-3">
-                  {entry._type === 'expense' ? (
-                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
-                      <ShoppingBag size={11} />
-                      {entry.category?.name || 'Expense'}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
-                      <CreditCard size={11} />
-                      {entry.debtName}
-                    </span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate max-w-[160px]">
-                    {entry._type === 'expense'
-                      ? (entry.description || entry.category?.name || 'Expense')
-                      : (entry.notes || 'Debt payment')}
-                  </p>
-                </td>
-                <td className="px-4 py-3 hidden sm:table-cell">
-                  <p className="text-sm text-neutral-400 dark:text-neutral-500">{formatDate(entry.date)}</p>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <span className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
-                    {formatPHP(entry.amount)}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-1">
-                    {entry._type === 'expense' && (
-                      <button onClick={() => setEditingTx(entry)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                        <Pencil size={13} />
-                      </button>
-                    )}
-                    {entry._type === 'expense' && (
-                      <button onClick={() => deleteTx(entry.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-                        <Trash2 size={13} />
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-
-            {/* Empty state inside table */}
-            {filtered.length === 0 && !addingRow && (
+            {filtered.length === 0 ? (
               <tr>
                 <td colSpan={5} className="text-center py-12 text-neutral-400 dark:text-neutral-500">
                   <p className="text-sm font-medium">No entries yet</p>
-                  <p className="text-xs mt-1">Click "+ Add entry" above to log an expense or debt payment.</p>
+                  <p className="text-xs mt-1">Use "+ Add entry" above to log an expense or debt payment.</p>
                 </td>
               </tr>
+            ) : (
+              filtered.map(entry => (
+                <tr key={`${entry._type}-${entry.id}`} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                  <td className="px-4 py-4">
+                    {entry._type === 'expense' ? (
+                      <span className="inline-flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 whitespace-nowrap">
+                        <ShoppingBag size={12} />
+                        {entry.category?.name || 'Expense'}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 whitespace-nowrap">
+                        <CreditCard size={12} />
+                        {entry.debtName}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-4">
+                    <p className="text-sm text-neutral-800 dark:text-neutral-100">
+                      {entry._type === 'expense'
+                        ? (entry.description || entry.category?.name || 'Expense')
+                        : (entry.notes || 'Debt payment')}
+                    </p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5 sm:hidden">{formatDate(entry.date)}</p>
+                  </td>
+                  <td className="px-4 py-4 hidden sm:table-cell">
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">{formatDate(entry.date)}</p>
+                  </td>
+                  <td className="px-4 py-4 text-right">
+                    <span className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
+                      {formatPHP(entry.amount)}
+                    </span>
+                    {entry._type === 'expense' && (
+                      <div className="flex items-center justify-end gap-1 mt-1 sm:hidden">
+                        <button onClick={() => setEditingTx(entry)} className="p-1 rounded text-neutral-300 hover:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                          <Pencil size={12} />
+                        </button>
+                        <button onClick={() => deleteTx(entry.id)} className="p-1 rounded text-neutral-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 hidden sm:table-cell">
+                    {entry._type === 'expense' && (
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => setEditingTx(entry)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => deleteTx(entry.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
