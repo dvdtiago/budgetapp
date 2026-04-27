@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Target, Plus, Pencil, Trash2, X, Check } from 'lucide-react';
+import { Target, Plus, Pencil, Trash2, X, Check, PiggyBank } from 'lucide-react';
 import api from '../lib/api.js';
 import { formatPHP, formatDate, formatPercent } from '../lib/utils.js';
 
@@ -10,14 +10,14 @@ const GOAL_TYPES = [
 ];
 
 const TYPE_COLORS = {
-  SAVINGS: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  DEBT_FREE: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  SAVINGS:  'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  DEBT_FREE:'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   PURCHASE: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
 };
 
 const PROGRESS_COLORS = {
-  SAVINGS: 'bg-emerald-500',
-  DEBT_FREE: 'bg-blue-500',
+  SAVINGS:  'bg-emerald-500',
+  DEBT_FREE:'bg-blue-500',
   PURCHASE: 'bg-violet-500',
 };
 
@@ -37,7 +37,7 @@ function GoalForm({ initial, onSave, onCancel }) {
     try {
       await onSave({
         ...form,
-        targetAmount: Number(form.targetAmount),
+        targetAmount: form.targetAmount !== '' ? Number(form.targetAmount) : null,
         currentAmount: Number(form.currentAmount) || 0,
         deadline: form.deadline || null,
       });
@@ -60,12 +60,13 @@ function GoalForm({ initial, onSave, onCancel }) {
           </select>
         </div>
         <div>
-          <label className="label">Target Amount (₱)</label>
-          <input className="input" type="number" min="0" step="0.01" value={form.targetAmount} onChange={e => set('targetAmount', e.target.value)} required placeholder="0.00" />
+          <label className="label">Target Amount (₱) <span className="text-neutral-400 font-normal normal-case">(optional)</span></label>
+          <input className="input" type="number" min="0" step="0.01" value={form.targetAmount} onChange={e => set('targetAmount', e.target.value)} placeholder="Leave blank for open-ended" />
         </div>
         <div>
-          <label className="label">Current Amount (₱)</label>
+          <label className="label">Opening Balance (₱)</label>
           <input className="input" type="number" min="0" step="0.01" value={form.currentAmount} onChange={e => set('currentAmount', e.target.value)} placeholder="0.00" />
+          <p className="text-xs text-neutral-400 mt-1">Amount already saved before tracking started.</p>
         </div>
         <div>
           <label className="label">Deadline (optional)</label>
@@ -84,6 +85,60 @@ function GoalForm({ initial, onSave, onCancel }) {
   );
 }
 
+function ContributionForm({ goal, onSave, onCancel }) {
+  const [form, setForm] = useState({ amount: '', date: new Date().toISOString().slice(0, 10), notes: '' });
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await onSave(form);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const remaining = goal.targetAmount ? Number(goal.targetAmount) - Number(goal.currentAmount) : null;
+
+  return (
+    <form onSubmit={submit} className="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-700 space-y-3">
+      <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+        <PiggyBank size={14} className="text-emerald-500" /> Add to {goal.name}
+      </p>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">Amount (₱)</label>
+          <input
+            className="input"
+            type="number" min="0" step="0.01"
+            value={form.amount}
+            onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
+            placeholder={remaining ? String(remaining.toFixed(2)) : '0.00'}
+            required
+            autoFocus
+          />
+          {remaining !== null && (
+            <p className="text-xs text-neutral-400 mt-1">{formatPHP(remaining)} remaining to target.</p>
+          )}
+        </div>
+        <div>
+          <label className="label">Date</label>
+          <input className="input" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required />
+        </div>
+      </div>
+      <div>
+        <label className="label">Notes (optional)</label>
+        <input className="input" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="e.g. Monthly contribution" />
+      </div>
+      <div className="flex gap-2">
+        <button type="button" onClick={onCancel} className="btn-secondary flex-1">Cancel</button>
+        <button type="submit" disabled={saving} className="btn-primary flex-1">{saving ? 'Saving…' : 'Save'}</button>
+      </div>
+    </form>
+  );
+}
+
 function ProgressBar({ percent, type }) {
   return (
     <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2">
@@ -95,17 +150,9 @@ function ProgressBar({ percent, type }) {
   );
 }
 
-function projectedDate(goal) {
-  if (!goal.deadline || goal.targetAmount <= 0) return null;
-  const remaining = goal.targetAmount - goal.currentAmount;
-  if (remaining <= 0) return null;
-  return new Date(goal.deadline);
-}
-
 function daysUntil(dateStr) {
   if (!dateStr) return null;
-  const diff = Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
-  return diff;
+  return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
 }
 
 export default function Goals() {
@@ -113,8 +160,7 @@ export default function Goals() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [progressEdit, setProgressEdit] = useState(null);
-  const [progressVal, setProgressVal] = useState('');
+  const [contributing, setContributing] = useState(null); // goalId
 
   useEffect(() => { load(); }, []);
 
@@ -141,17 +187,15 @@ export default function Goals() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('Delete this goal?')) return;
+    if (!confirm('Delete this goal? All contribution history will also be removed.')) return;
     await api.delete(`/goals/${id}`);
     setGoals(g => g.filter(x => x.id !== id));
   }
 
-  async function saveProgress(goal) {
-    const val = Number(progressVal);
-    if (isNaN(val)) return;
-    const r = await api.put(`/goals/${goal.id}`, { currentAmount: val });
-    setGoals(g => g.map(x => x.id === goal.id ? r.data : x));
-    setProgressEdit(null);
+  async function handleContribution(goal, form) {
+    await api.post(`/goals/${goal.id}/contribution`, form);
+    setContributing(null);
+    load(); // refresh to get updated currentAmount
   }
 
   if (loading) return <div className="flex items-center justify-center h-40 text-neutral-400">Loading…</div>;
@@ -188,10 +232,11 @@ export default function Goals() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {goals.map(goal => {
-            const percent = Number(goal.targetAmount) > 0
+            const hasTarget = goal.targetAmount != null && Number(goal.targetAmount) > 0;
+            const percent = hasTarget
               ? Math.min(100, (Number(goal.currentAmount) / Number(goal.targetAmount)) * 100)
               : 0;
-            const done = percent >= 100;
+            const done = hasTarget && percent >= 100;
             const days = daysUntil(goal.deadline);
 
             if (editing?.id === goal.id) {
@@ -202,7 +247,7 @@ export default function Goals() {
                     initial={{
                       name: goal.name,
                       type: goal.type,
-                      targetAmount: String(goal.targetAmount),
+                      targetAmount: goal.targetAmount != null ? String(goal.targetAmount) : '',
                       currentAmount: String(goal.currentAmount),
                       deadline: goal.deadline ? goal.deadline.slice(0, 10) : '',
                       notes: goal.notes ?? '',
@@ -216,6 +261,7 @@ export default function Goals() {
 
             return (
               <div key={goal.id} className="card space-y-3">
+                {/* Header */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -241,16 +287,18 @@ export default function Goals() {
                   </div>
                 </div>
 
+                {/* Progress */}
                 <div>
                   <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400 mb-1.5">
                     <span>{formatPHP(goal.currentAmount)} saved</span>
-                    <span>{formatPercent(percent)} of {formatPHP(goal.targetAmount)}</span>
+                    {hasTarget && <span>{formatPercent(percent)} of {formatPHP(goal.targetAmount)}</span>}
                   </div>
-                  <ProgressBar percent={percent} type={goal.type} />
+                  {hasTarget && <ProgressBar percent={percent} type={goal.type} />}
                 </div>
 
+                {/* Deadline + contribute */}
                 <div className="flex items-center justify-between gap-2">
-                  <div className="text-xs text-neutral-400 dark:text-neutral-500">
+                  <div className="text-xs text-neutral-400 dark:text-neutral-400">
                     {goal.deadline ? (
                       days === null ? null : days < 0
                         ? <span className="text-red-500">Overdue by {Math.abs(days)} days</span>
@@ -262,34 +310,24 @@ export default function Goals() {
                     ) : <span>No deadline set</span>}
                   </div>
 
-                  {progressEdit === goal.id ? (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs text-neutral-400">₱</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="input py-1 text-sm w-28"
-                        value={progressVal}
-                        onChange={e => setProgressVal(e.target.value)}
-                        autoFocus
-                      />
-                      <button onClick={() => saveProgress(goal)} className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors">
-                        <Check size={14} />
-                      </button>
-                      <button onClick={() => setProgressEdit(null)} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
+                  {!done && contributing !== goal.id && (
                     <button
-                      onClick={() => { setProgressEdit(goal.id); setProgressVal(String(goal.currentAmount)); }}
-                      className="text-xs text-brand-600 dark:text-brand-400 hover:underline"
+                      onClick={() => setContributing(goal.id)}
+                      className="btn-secondary text-xs"
                     >
-                      Update progress
+                      <PiggyBank size={13} /> Add funds
                     </button>
                   )}
                 </div>
+
+                {/* Contribution form */}
+                {contributing === goal.id && (
+                  <ContributionForm
+                    goal={goal}
+                    onSave={form => handleContribution(goal, form)}
+                    onCancel={() => setContributing(null)}
+                  />
+                )}
               </div>
             );
           })}

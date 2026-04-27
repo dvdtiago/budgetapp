@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Trash2, Pencil, CreditCard, ShoppingBag, Plus } from 'lucide-react';
+import { Trash2, Pencil, CreditCard, ShoppingBag, Plus, Target } from 'lucide-react';
 import api from '../lib/api.js';
 import { formatPHP, formatDate } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
@@ -9,21 +9,24 @@ export default function Transactions() {
   const { month } = useMonth();
   const [transactions, setTransactions] = useState([]);
   const [debtPayments, setDebtPayments] = useState([]);
+  const [goalContributions, setGoalContributions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [debts, setDebts] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingTx, setEditingTx] = useState(null);
   const [filter, setFilter] = useState('all');
   const [showForm, setShowForm] = useState(false);
-  const [newEntry, setNewEntry] = useState({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
+  const [newEntry, setNewEntry] = useState({ type: 'expense', categoryId: '', debtId: '', goalId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
   const [saving, setSaving] = useState(false);
 
   async function load() {
     setLoading(true);
-    const [txs, cats, ds] = await Promise.all([
+    const [txs, cats, ds, gs] = await Promise.all([
       api.get('/transactions', { params: { month } }),
       api.get('/budget/categories'),
       api.get('/debts'),
+      api.get('/goals'),
     ]);
 
     const [y, m] = month.split('-').map(Number);
@@ -40,10 +43,14 @@ export default function Transactions() {
       )
     );
 
+    const contribsRes = await api.get('/goals/contributions', { params: { month } });
+
     setTransactions(txs.data.map(t => ({ ...t, _type: 'expense' })));
     setDebtPayments(payments.flat());
+    setGoalContributions(contribsRes.data.map(c => ({ ...c, _type: 'goal' })));
     setCategories(cats.data);
     setDebts(ds.data);
+    setGoals(gs.data);
     setLoading(false);
   }
 
@@ -71,14 +78,20 @@ export default function Transactions() {
           description: newEntry.description,
           date: newEntry.date,
         });
-      } else {
+      } else if (newEntry.type === 'payment') {
         await api.post(`/debts/${newEntry.debtId}/payment`, {
           amount: newEntry.amount,
           date: newEntry.date,
           notes: newEntry.description,
         });
+      } else if (newEntry.type === 'goal') {
+        await api.post(`/goals/${newEntry.goalId}/contribution`, {
+          amount: newEntry.amount,
+          date: newEntry.date,
+          notes: newEntry.description,
+        });
       }
-      setNewEntry({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
+      setNewEntry({ type: 'expense', categoryId: '', debtId: '', goalId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' });
       setShowForm(false);
       load();
     } finally {
@@ -86,11 +99,54 @@ export default function Transactions() {
     }
   }
 
-  const allEntries = [...transactions, ...debtPayments].sort((a, b) => new Date(b.date) - new Date(a.date));
-  const filtered = filter === 'expenses' ? transactions : filter === 'payments' ? debtPayments : allEntries;
+  const allEntries = [...transactions, ...debtPayments, ...goalContributions].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const filtered =
+    filter === 'expenses' ? transactions :
+    filter === 'payments' ? debtPayments :
+    filter === 'goals' ? goalContributions :
+    allEntries;
 
   const totalExpenses = transactions.reduce((s, t) => s + Number(t.amount), 0);
   const totalPayments = debtPayments.reduce((s, p) => s + Number(p.amount), 0);
+  const totalGoals = goalContributions.reduce((s, c) => s + Number(c.amount), 0);
+
+  function entryBadge(entry, size = 11) {
+    if (entry._type === 'expense') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
+          <ShoppingBag size={size} />
+          {entry.category?.name || 'Expense'}
+        </span>
+      );
+    }
+    if (entry._type === 'payment') {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
+          <CreditCard size={size} />
+          {entry.debtName}
+        </span>
+      );
+    }
+    // goal contribution
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300">
+        <Target size={size} />
+        {entry.goal?.name || 'Goal'}
+      </span>
+    );
+  }
+
+  function entryDescription(entry) {
+    if (entry._type === 'expense') return entry.description || entry.category?.name || 'Expense';
+    if (entry._type === 'payment') return entry.notes || 'Debt payment';
+    return entry.notes || 'Goal contribution';
+  }
+
+  function entryAmountClass(entry) {
+    if (entry._type === 'payment') return 'text-brand-600 dark:text-brand-400';
+    if (entry._type === 'goal') return 'text-emerald-600 dark:text-emerald-400';
+    return 'text-neutral-800 dark:text-neutral-100';
+  }
 
   if (loading) return <div className="flex items-center justify-center h-64 text-neutral-400">Loading…</div>;
 
@@ -100,10 +156,11 @@ export default function Transactions() {
       <div>
         <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Transactions</h1>
         <p className="text-sm text-neutral-400 dark:text-neutral-400">
-          {formatPHP(totalExpenses)} expenses · {formatPHP(totalPayments)} debt payments · {formatPHP(totalExpenses + totalPayments)} total out
+          {formatPHP(totalExpenses)} expenses · {formatPHP(totalPayments)} debt payments
+          {totalGoals > 0 && <> · {formatPHP(totalGoals)} goal savings</>}
         </p>
         <button
-          onClick={() => { setShowForm(s => !s); setNewEntry({ type: 'expense', categoryId: '', debtId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' }); }}
+          onClick={() => { setShowForm(s => !s); setNewEntry({ type: 'expense', categoryId: '', debtId: '', goalId: '', description: '', date: new Date().toISOString().slice(0, 10), amount: '' }); }}
           className="btn-primary mt-3"
         >
           <Plus size={15} /> Add entry
@@ -121,10 +178,11 @@ export default function Transactions() {
                 <select
                   className="input"
                   value={newEntry.type}
-                  onChange={e => setNewEntry(r => ({ ...r, type: e.target.value, categoryId: '', debtId: '' }))}
+                  onChange={e => setNewEntry(r => ({ ...r, type: e.target.value, categoryId: '', debtId: '', goalId: '' }))}
                 >
                   <option value="expense">Expense</option>
                   <option value="payment">Debt Payment</option>
+                  <option value="goal">Goal Contribution</option>
                 </select>
               </div>
               <div>
@@ -137,12 +195,20 @@ export default function Transactions() {
                       {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                     </select>
                   </>
-                ) : (
+                ) : newEntry.type === 'payment' ? (
                   <>
                     <label className="label">Debt</label>
                     <select className="input" value={newEntry.debtId} onChange={e => setNewEntry(r => ({ ...r, debtId: e.target.value }))} required>
                       <option value="" disabled>Select a debt</option>
                       {debts.filter(d => d.status === 'ACTIVE').map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </>
+                ) : (
+                  <>
+                    <label className="label">Goal</label>
+                    <select className="input" value={newEntry.goalId} onChange={e => setNewEntry(r => ({ ...r, goalId: e.target.value }))} required>
+                      <option value="" disabled>Select a goal</option>
+                      {goals.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                     </select>
                   </>
                 )}
@@ -165,8 +231,8 @@ export default function Transactions() {
               </div>
             </div>
             <div>
-              <label className="label">Description (optional)</label>
-              <input className="input" placeholder="e.g. Grocery run" value={newEntry.description} onChange={e => setNewEntry(r => ({ ...r, description: e.target.value }))} />
+              <label className="label">Notes (optional)</label>
+              <input className="input" placeholder={newEntry.type === 'expense' ? 'e.g. Grocery run' : newEntry.type === 'goal' ? 'e.g. Monthly contribution' : 'e.g. Extra payment'} value={newEntry.description} onChange={e => setNewEntry(r => ({ ...r, description: e.target.value }))} />
             </div>
             <div className="flex gap-2 pt-1">
               <button type="button" onClick={() => setShowForm(false)} className="btn-secondary flex-1">Cancel</button>
@@ -180,7 +246,12 @@ export default function Transactions() {
 
       {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap">
-        {[['all', 'All'], ['expenses', 'Expenses'], ['payments', 'Debt Payments']].map(([val, label]) => (
+        {[
+          ['all', 'All'],
+          ['expenses', 'Expenses'],
+          ['payments', 'Debt Payments'],
+          ['goals', 'Goal Savings'],
+        ].map(([val, label]) => (
           <button
             key={val}
             onClick={() => setFilter(val)}
@@ -200,37 +271,25 @@ export default function Transactions() {
         {filtered.length === 0 ? (
           <div className="text-center py-12 text-neutral-400 dark:text-neutral-500">
             <p className="text-sm font-medium">No entries yet</p>
-            <p className="text-xs mt-1">Use "+ Add entry" above to log an expense or debt payment.</p>
+            <p className="text-xs mt-1">Use "+ Add entry" above to log an expense, debt payment, or goal contribution.</p>
           </div>
         ) : filtered.map(entry => (
           <div key={`${entry._type}-${entry.id}`} className="px-4 py-3.5">
             {/* Row 1: badge + amount */}
             <div className="flex items-center justify-between gap-3">
-              {entry._type === 'expense' ? (
-                <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
-                  <ShoppingBag size={11} />
-                  {entry.category?.name || 'Expense'}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
-                  <CreditCard size={11} />
-                  {entry.debtName}
-                </span>
-              )}
-              <span className={`text-sm font-semibold shrink-0 ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
+              {entryBadge(entry, 11)}
+              <span className={`text-sm font-semibold shrink-0 ${entryAmountClass(entry)}`}>
                 {formatPHP(entry.amount)}
               </span>
             </div>
             {/* Row 2: description + date */}
             <div className="flex items-center justify-between gap-3 mt-1">
               <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate">
-                {entry._type === 'expense'
-                  ? (entry.description || entry.category?.name || 'Expense')
-                  : (entry.notes || 'Debt payment')}
+                {entryDescription(entry)}
               </p>
               <p className="text-xs text-neutral-400 dark:text-neutral-400 shrink-0">{formatDate(entry.date)}</p>
             </div>
-            {/* Row 3: actions */}
+            {/* Row 3: actions (expenses only) */}
             {entry._type === 'expense' && (
               <div className="flex items-center gap-2 mt-2">
                 <button onClick={() => setEditingTx(entry)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
@@ -262,37 +321,25 @@ export default function Transactions() {
               <tr>
                 <td colSpan={5} className="text-center py-12 text-neutral-400 dark:text-neutral-500">
                   <p className="text-sm font-medium">No entries yet</p>
-                  <p className="text-xs mt-1">Use "+ Add entry" above to log an expense or debt payment.</p>
+                  <p className="text-xs mt-1">Use "+ Add entry" above to log an expense, debt payment, or goal contribution.</p>
                 </td>
               </tr>
             ) : (
               filtered.map(entry => (
                 <tr key={`${entry._type}-${entry.id}`} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
                   <td className="px-4 py-4 w-40">
-                    {entry._type === 'expense' ? (
-                      <span className="inline-flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 whitespace-nowrap">
-                        <ShoppingBag size={12} />
-                        {entry.category?.name || 'Expense'}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 whitespace-nowrap">
-                        <CreditCard size={12} />
-                        {entry.debtName}
-                      </span>
-                    )}
+                    {entryBadge(entry, 12)}
                   </td>
                   <td className="px-4 py-4">
                     <p className="text-sm text-neutral-800 dark:text-neutral-100">
-                      {entry._type === 'expense'
-                        ? (entry.description || entry.category?.name || 'Expense')
-                        : (entry.notes || 'Debt payment')}
+                      {entryDescription(entry)}
                     </p>
                   </td>
                   <td className="px-4 py-4 w-32">
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">{formatDate(entry.date)}</p>
                   </td>
                   <td className="px-4 py-4 text-right w-32">
-                    <span className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
+                    <span className={`text-sm font-semibold ${entryAmountClass(entry)}`}>
                       {formatPHP(entry.amount)}
                     </span>
                   </td>

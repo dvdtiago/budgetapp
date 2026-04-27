@@ -19,7 +19,9 @@ export default function SurplusModal({ month, onClose }) {
     ]).then(([surplusRes, goalsRes]) => {
       setData(surplusRes.data);
       setAllocations(surplusRes.data.suggestion.map(a => ({ ...a, amount: String(Number(a.amount).toFixed(2)) })));
-      const activeGoals = goalsRes.data.filter(g => Number(g.currentAmount) < Number(g.targetAmount));
+      const activeGoals = goalsRes.data.filter(g =>
+        g.targetAmount == null || Number(g.currentAmount) < Number(g.targetAmount)
+      );
       setGoals(activeGoals);
       setGoalAllocations(Object.fromEntries(activeGoals.map(g => [g.id, ''])));
       setLoading(false);
@@ -52,14 +54,14 @@ export default function SurplusModal({ month, onClose }) {
         totalSurplus: data.surplus,
       });
 
-      // Update goal progress for any goal with an allocation
+      // Log goal contributions for any goal with an allocation
+      const today = new Date().toISOString().slice(0, 10);
       const goalUpdates = goals
         .filter(g => parseFloat(goalAllocations[g.id]) > 0)
-        .map(g => api.put(`/goals/${g.id}`, {
-          currentAmount: Math.min(
-            Number(g.targetAmount),
-            Number(g.currentAmount) + (parseFloat(goalAllocations[g.id]) || 0),
-          ),
+        .map(g => api.post(`/goals/${g.id}/contribution`, {
+          amount: parseFloat(goalAllocations[g.id]),
+          date: today,
+          notes: `Leftover cash allocation — ${month}`,
         }));
       await Promise.all(goalUpdates);
 
@@ -158,12 +160,15 @@ export default function SurplusModal({ month, onClose }) {
                     <span className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-wide">Goals</span>
                   </div>
                   {goals.map(goal => {
-                    const remaining = Number(goal.targetAmount) - Number(goal.currentAmount);
+                    const hasTarget = goal.targetAmount != null && Number(goal.targetAmount) > 0;
+                    const remaining = hasTarget ? Number(goal.targetAmount) - Number(goal.currentAmount) : null;
                     return (
                       <div key={goal.id} className="flex items-center gap-3">
                         <div className="flex-1 min-w-0">
                           <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100 truncate block">{goal.name}</span>
-                          <span className="text-xs text-neutral-400 dark:text-neutral-500">{formatPHP(remaining)} remaining</span>
+                          <span className="text-xs text-neutral-400 dark:text-neutral-500">
+                            {remaining !== null ? `${formatPHP(remaining)} remaining` : `${formatPHP(goal.currentAmount)} saved`}
+                          </span>
                         </div>
                         <div className="shrink-0 flex items-center gap-1">
                           <span className="text-sm text-neutral-400 dark:text-neutral-500">₱</span>
@@ -171,7 +176,7 @@ export default function SurplusModal({ month, onClose }) {
                             type="number"
                             min="0"
                             step="0.01"
-                            max={remaining}
+                            max={remaining ?? undefined}
                             value={goalAllocations[goal.id]}
                             onChange={e => updateGoalAmount(goal.id, e.target.value)}
                             className="input w-32 text-right"

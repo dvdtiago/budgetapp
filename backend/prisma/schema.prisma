@@ -23,6 +23,7 @@ model User {
   surplusAllocations SurplusAllocation[]
   settings           Settings?
   goals              Goal[]
+  goalContributions  GoalContribution[]
 
   @@map("users")
 }
@@ -176,15 +177,31 @@ model Goal {
   userId        Int       @map("user_id")
   name          String
   type          GoalType
-  targetAmount  Decimal   @map("target_amount") @db.Decimal(14, 2)
+  targetAmount  Decimal?  @map("target_amount") @db.Decimal(14, 2)
   currentAmount Decimal   @default(0) @map("current_amount") @db.Decimal(14, 2)
   deadline      DateTime?
   notes         String?
   createdAt     DateTime  @default(now()) @map("created_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user          User               @relation(fields: [userId], references: [id])
+  contributions GoalContribution[]
 
   @@map("goals")
+}
+
+model GoalContribution {
+  id        Int      @id @default(autoincrement())
+  goalId    Int      @map("goal_id")
+  userId    Int      @map("user_id")
+  amount    Decimal  @db.Decimal(14, 2)
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("goal_contributions")
 }
 
 enum ReminderFrequency {

@@ -154,20 +154,17 @@ export default function Layout() {
             </NavLink>
           ))}
 
-          {/* Dark mode toggle — lives right after Settings */}
-          <div className="pt-1">
-            <button
-              onClick={() => setDark(d => !d)}
-              className="flex items-center gap-2.5 px-3 py-2 w-full rounded-md text-[13.5px] text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors"
-            >
-              {dark ? <Sun size={17} /> : <Moon size={17} />}
-              {dark ? 'Light mode' : 'Dark mode'}
-            </button>
-          </div>
-        </nav>
+          </nav>
 
-        {/* Sign out */}
-        <div className="px-3 py-4 border-t border-neutral-200 dark:border-neutral-800">
+        {/* Dark mode + Sign out */}
+        <div className="px-3 py-4 border-t border-neutral-200 dark:border-neutral-800 space-y-0.5">
+          <button
+            onClick={() => setDark(d => !d)}
+            className="flex items-center gap-2.5 px-3 py-2 w-full rounded-md text-[13.5px] text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700/50 transition-colors"
+          >
+            {dark ? <Sun size={17} /> : <Moon size={17} />}
+            {dark ? 'Light mode' : 'Dark mode'}
+          </button>
           <button
             onClick={logout}
             className="flex items-center gap-2.5 px-3 py-2 w-full rounded-md text-[13.5px] text-neutral-400 dark:text-neutral-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
