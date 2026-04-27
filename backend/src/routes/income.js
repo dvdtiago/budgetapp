@@ -57,6 +57,39 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  try {
+    const entry = await prisma.incomeEntry.findFirst({
+      where: { id: Number(req.params.id), userId: req.userId },
+    });
+    if (!entry) return res.status(404).json({ error: 'Entry not found.' });
+
+    const { originalAmount, originalCurrency, exchangeRate, type, description, date } = req.body;
+
+    const amountPhp = originalCurrency === 'PHP'
+      ? Number(originalAmount)
+      : Number(originalAmount) * Number(exchangeRate);
+
+    const updated = await prisma.incomeEntry.update({
+      where: { id: entry.id },
+      data: {
+        amountPhp,
+        originalAmount: Number(originalAmount),
+        originalCurrency,
+        exchangeRate: originalCurrency === 'PHP' ? 1 : Number(exchangeRate),
+        type,
+        description,
+        date: new Date(date),
+      },
+    });
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
 router.delete('/:id', async (req, res) => {
   try {
     const entry = await prisma.incomeEntry.findFirst({

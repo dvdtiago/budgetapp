@@ -1,6 +1,26 @@
 import { useEffect, useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Plus, Trash2, CreditCard, Wallet, Building2, Smartphone } from 'lucide-react';
 import api from '../lib/api.js';
+
+const PM_TYPE_OPTIONS = [
+  { value: 'CASH', label: 'Cash', icon: Wallet },
+  { value: 'BANK_ACCOUNT', label: 'Bank account', icon: Building2 },
+  { value: 'E_WALLET', label: 'E-wallet (GCash, Maya…)', icon: Smartphone },
+];
+
+const PM_TYPE_ICONS = {
+  CREDIT_CARD: CreditCard,
+  CASH: Wallet,
+  BANK_ACCOUNT: Building2,
+  E_WALLET: Smartphone,
+};
+
+const PM_TYPE_LABELS = {
+  CREDIT_CARD: 'Credit card',
+  CASH: 'Cash',
+  BANK_ACCOUNT: 'Bank account',
+  E_WALLET: 'E-wallet',
+};
 
 export default function Settings() {
   const [settings, setSettings] = useState(null);
@@ -11,12 +31,46 @@ export default function Settings() {
   const [pwError, setPwError] = useState('');
   const [pwSaved, setPwSaved] = useState(false);
 
+  // Payment methods
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [pmLoading, setPmLoading] = useState(true);
+  const [pmForm, setPmForm] = useState({ name: '', type: 'CASH' });
+  const [pmSaving, setPmSaving] = useState(false);
+  const [showPmForm, setShowPmForm] = useState(false);
+
   useEffect(() => {
     api.get('/settings').then(r => {
       setSettings(r.data);
       setLoading(false);
     });
+    loadPaymentMethods();
   }, []);
+
+  async function loadPaymentMethods() {
+    setPmLoading(true);
+    const r = await api.get('/payment-methods');
+    setPaymentMethods(r.data);
+    setPmLoading(false);
+  }
+
+  async function createPaymentMethod(e) {
+    e.preventDefault();
+    setPmSaving(true);
+    try {
+      await api.post('/payment-methods', pmForm);
+      setPmForm({ name: '', type: 'CASH' });
+      setShowPmForm(false);
+      loadPaymentMethods();
+    } finally {
+      setPmSaving(false);
+    }
+  }
+
+  async function deletePaymentMethod(id) {
+    if (!confirm('Remove this payment method?')) return;
+    await api.delete(`/payment-methods/${id}`);
+    loadPaymentMethods();
+  }
 
   function set(k, v) { setSettings(s => ({ ...s, [k]: v })); }
 
@@ -75,7 +129,7 @@ export default function Settings() {
       <form onSubmit={saveSettings} className="space-y-6">
         {/* Profile */}
         <div className="card space-y-4">
-          <h2 className="font-semibold text-neutral-800">Profile</h2>
+          <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Profile</h2>
           <div>
             <label className="label">Your name</label>
             <input className="input" value={settings.user?.name || ''} onChange={e => set('user', { ...settings.user, name: e.target.value })} required />
@@ -88,7 +142,7 @@ export default function Settings() {
 
         {/* Goal */}
         <div className="card space-y-4">
-          <h2 className="font-semibold text-neutral-800">Debt Payoff Goal</h2>
+          <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Debt Payoff Goal</h2>
           <div>
             <label className="label">Target date to be debt-free</label>
             <input
@@ -103,7 +157,7 @@ export default function Settings() {
 
         {/* Email reminders */}
         <div className="card space-y-4">
-          <h2 className="font-semibold text-neutral-800">Email Reminders</h2>
+          <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Email Reminders</h2>
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -150,9 +204,91 @@ export default function Settings() {
         </button>
       </form>
 
+      {/* Payment methods */}
+      <div className="card space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Payment Methods</h2>
+          <button
+            type="button"
+            onClick={() => setShowPmForm(s => !s)}
+            className="btn-secondary text-xs gap-1.5"
+          >
+            <Plus size={13} /> Add
+          </button>
+        </div>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 -mt-2">
+          Credit cards are added automatically when you create a debt. Add cash, bank accounts, or e-wallets here.
+        </p>
+
+        {showPmForm && (
+          <form onSubmit={createPaymentMethod} className="flex flex-col sm:flex-row gap-2 pt-1">
+            <select
+              className="input sm:w-44 shrink-0"
+              value={pmForm.type}
+              onChange={e => setPmForm(f => ({ ...f, type: e.target.value }))}
+            >
+              {PM_TYPE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            <input
+              className="input flex-1"
+              placeholder="Name (e.g. BDO Savings)"
+              value={pmForm.name}
+              onChange={e => setPmForm(f => ({ ...f, name: e.target.value }))}
+              required
+            />
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowPmForm(false)} className="btn-secondary flex-1 sm:flex-none">Cancel</button>
+              <button type="submit" disabled={pmSaving} className="btn-primary flex-1 sm:flex-none">
+                {pmSaving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {pmLoading ? (
+          <p className="text-sm text-neutral-400 py-2">Loading…</p>
+        ) : paymentMethods.length === 0 ? (
+          <p className="text-sm text-neutral-400 dark:text-neutral-500 py-2">No payment methods yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {paymentMethods.map(pm => {
+              const Icon = PM_TYPE_ICONS[pm.type] ?? Wallet;
+              const isCc = pm.type === 'CREDIT_CARD';
+              return (
+                <div key={pm.id} className="flex items-center gap-3 py-1.5">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${isCc ? 'bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400' : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400'}`}>
+                    <Icon size={14} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100">{pm.name}</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-500">
+                      {PM_TYPE_LABELS[pm.type]}{isCc && pm.debt ? ` · linked to ${pm.debt.name}` : ''}
+                    </p>
+                  </div>
+                  {!isCc && (
+                    <button
+                      type="button"
+                      onClick={() => deletePaymentMethod(pm.id)}
+                      className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                  {isCc && (
+                    <span className="text-xs text-neutral-300 dark:text-neutral-600 shrink-0 pr-1">auto</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Change password */}
       <form onSubmit={changePassword} className="card space-y-4">
-        <h2 className="font-semibold text-neutral-800">Change Password</h2>
+        <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Change Password</h2>
         {pwError && <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm px-3 py-2 rounded-lg">{pwError}</div>}
         {pwSaved && <div className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm px-3 py-2 rounded-lg">Password updated successfully.</div>}
         <div>

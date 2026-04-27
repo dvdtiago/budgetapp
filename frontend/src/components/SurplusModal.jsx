@@ -52,6 +52,7 @@ export default function SurplusModal({ month, onClose }) {
       await api.post(`/surplus/${month}/confirm`, {
         allocations: allocations.map(a => ({ ...a, amount: parseFloat(a.amount) || 0 })),
         totalSurplus: data.surplus,
+        totalGoalAllocated,
       });
 
       // Log goal contributions for any goal with an allocation
@@ -93,6 +94,15 @@ export default function SurplusModal({ month, onClose }) {
                   <p>Income: <span className="text-green-600 dark:text-green-400 font-medium">{formatPHP(data.totalIncome)}</span>
                   {' · '}Expenses: <span className="font-medium text-neutral-600 dark:text-neutral-300">{formatPHP(data.totalExpenses)}</span>
                   {' · '}Debt paid: <span className="font-medium text-brand-600 dark:text-brand-400">{formatPHP(data.totalDebtPaid)}</span></p>
+                  {data.carryover > 0 && (
+                    <p className="text-green-600 dark:text-green-400 font-medium">
+                      ↩ Includes {formatPHP(data.carryover)} rolled over from {(() => {
+                        const [y, m] = month.split('-').map(Number);
+                        const prev = new Date(y, m - 2, 1);
+                        return prev.toLocaleString('default', { month: 'long', year: 'numeric' });
+                      })()}
+                    </p>
+                  )}
                 </div>
               </>
             ) : (

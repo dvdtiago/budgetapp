@@ -87,7 +87,66 @@ router.get('/', async (req, res) => {
       }),
     );
 
-    res.json({ incomeVsExpenses, debtHistory, categoryTrend });
+    // ── PER-DEBT BALANCE HISTORY ──────────────────────────────────────────────
+    // Historical: last 12 months (actual, from payments)
+    // Projected:  next 12 months (from unpaid amortization schedule)
+    const futureMonthKeys = Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() + 1 + i, 1);
+      return { year: d.getFullYear(), month: d.getMonth() + 1, key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` };
+    });
+
+    const activeDebts = await prisma.debt.findMany({
+      where: { userId: req.userId, status: { not: 'PAID_OFF' } },
+      select: { id: true, name: true, originalBalance: true, currentBalance: true, type: true },
+    });
+
+    const allPayments = await prisma.debtPayment.findMany({
+      where: { userId: req.userId, debtId: { in: activeDebts.map(d => d.id) } },
+      select: { debtId: true, amount: true, date: true },
+      orderBy: { date: 'asc' },
+    });
+
+    const futureStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const allAmort = await prisma.amortizationEntry.findMany({
+      where: {
+        debtId: { in: activeDebts.map(d => d.id) },
+        paymentDate: { gte: futureStart },
+        isPaid: false,
+      },
+      select: { debtId: true, paymentDate: true, remainingBalance: true },
+      orderBy: { paymentDate: 'asc' },
+    });
+
+    const debtBalances = activeDebts.map(debt => {
+      const debtPayments = allPayments.filter(p => p.debtId === debt.id);
+      const debtAmort = allAmort.filter(e => e.debtId === debt.id);
+
+      const historicalData = monthKeys.map(({ year, month, key }) => {
+        const monthEnd = new Date(year, month, 1);
+        const cumPaid = debtPayments
+          .filter(p => new Date(p.date) < monthEnd)
+          .reduce((s, p) => s + Number(p.amount), 0);
+        return { month: key, actual: Math.max(0, Number(debt.originalBalance) - cumPaid), projected: null };
+      });
+
+      const projectedData = futureMonthKeys.map(({ year, month, key }) => {
+        const monthStart = new Date(year, month - 1, 1);
+        const monthEnd = new Date(year, month, 1);
+        const entry = debtAmort.find(e => {
+          const d = new Date(e.paymentDate);
+          return d >= monthStart && d < monthEnd;
+        });
+        return { month: key, actual: null, projected: entry ? Number(entry.remainingBalance) : null };
+      });
+
+      return {
+        debtId: debt.id,
+        name: debt.name,
+        data: [...historicalData, ...projectedData],
+      };
+    });
+
+    res.json({ incomeVsExpenses, debtHistory, categoryTrend, debtBalances });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error.' });

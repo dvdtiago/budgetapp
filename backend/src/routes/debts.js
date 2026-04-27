@@ -5,7 +5,7 @@ import { authenticate } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate);
 
-function generateAmortization(balance, annualRate, monthlyPayment, startDate) {
+export function generateAmortization(balance, annualRate, monthlyPayment, startDate) {
   const entries = [];
   const monthlyRate = Number(annualRate) / 12;
   let remaining = Number(balance);
@@ -82,6 +82,11 @@ router.put('/:id', async (req, res) => {
     const debt = await prisma.debt.findFirst({ where: { id: Number(req.params.id), userId: req.userId } });
     if (!debt) return res.status(404).json({ error: 'Debt not found.' });
 
+    const newRate = req.body.interestRate !== undefined ? req.body.interestRate : debt.interestRate;
+    const newMinPayment = req.body.minPayment !== undefined ? req.body.minPayment : debt.minPayment;
+    const rateChanged = Number(newRate) !== Number(debt.interestRate);
+    const paymentChanged = Number(newMinPayment) !== Number(debt.minPayment);
+
     const updated = await prisma.debt.update({
       where: { id: Number(req.params.id) },
       data: {
@@ -91,8 +96,8 @@ router.put('/:id', async (req, res) => {
         status: req.body.status ?? debt.status,
         currentBalance: req.body.currentBalance ?? debt.currentBalance,
         originalBalance: req.body.originalBalance ?? debt.originalBalance,
-        interestRate: req.body.interestRate ?? debt.interestRate,
-        minPayment: req.body.minPayment ?? debt.minPayment,
+        interestRate: newRate,
+        minPayment: newMinPayment,
         plannedStartDate: req.body.plannedStartDate !== undefined
           ? (req.body.plannedStartDate ? new Date(req.body.plannedStartDate) : null)
           : debt.plannedStartDate,
@@ -101,6 +106,20 @@ router.put('/:id', async (req, res) => {
           : debt.clearDate,
       },
     });
+
+    // Regenerate amortization if rate or payment changed
+    if (rateChanged || paymentChanged) {
+      const startDate = new Date();
+      startDate.setDate(1);
+      startDate.setMonth(startDate.getMonth() + 1);
+      const entries = generateAmortization(updated.currentBalance, newRate, newMinPayment, startDate);
+      await prisma.amortizationEntry.deleteMany({ where: { debtId: debt.id, isPaid: false } });
+      if (entries.length > 0) {
+        await prisma.amortizationEntry.createMany({
+          data: entries.map(e => ({ ...e, debtId: debt.id })),
+        });
+      }
+    }
 
     res.json(updated);
   } catch (err) {
@@ -113,7 +132,7 @@ router.delete('/:id', async (req, res) => {
     const debt = await prisma.debt.findFirst({ where: { id: Number(req.params.id), userId: req.userId } });
     if (!debt) return res.status(404).json({ error: 'Debt not found.' });
 
-    await prisma.debt.delete({ where: { id: Number(req.params.id) } });
+    await prisma.debt.delete({ where: { id: debt.id } });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Server error.' });
@@ -214,7 +233,6 @@ router.put('/:debtId/payment/:paymentId', async (req, res) => {
       },
     });
 
-    // Adjust debt balance for the difference
     const debt = await prisma.debt.findUnique({ where: { id: payment.debtId } });
     const newBalance = Math.max(0, Number(debt.currentBalance) - diff);
     await prisma.debt.update({
@@ -239,6 +257,68 @@ router.get('/:id/payments', async (req, res) => {
     });
 
     res.json(payments);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+// ── BALANCE ADJUSTMENT (credit cards) ────────────────────────────────────────
+router.post('/:id/balance-adjustment', async (req, res) => {
+  try {
+    const debt = await prisma.debt.findFirst({ where: { id: Number(req.params.id), userId: req.userId } });
+    if (!debt) return res.status(404).json({ error: 'Debt not found.' });
+    if (debt.type !== 'CREDIT_CARD') return res.status(400).json({ error: 'Balance adjustments are only supported for credit cards.' });
+
+    const { newBalance, date, notes } = req.body;
+    const nb = Number(newBalance);
+    const previousBalance = Number(debt.currentBalance);
+
+    const adjustment = await prisma.balanceAdjustment.create({
+      data: {
+        debtId: debt.id,
+        userId: req.userId,
+        previousBalance,
+        newBalance: nb,
+        date: new Date(date),
+        notes: notes || null,
+      },
+    });
+
+    await prisma.debt.update({
+      where: { id: debt.id },
+      data: { currentBalance: nb },
+    });
+
+    // Regenerate unpaid amortization entries from new balance
+    const startDate = new Date();
+    startDate.setDate(1);
+    startDate.setMonth(startDate.getMonth() + 1);
+    const entries = generateAmortization(nb, debt.interestRate, debt.minPayment, startDate);
+    await prisma.amortizationEntry.deleteMany({ where: { debtId: debt.id, isPaid: false } });
+    if (entries.length > 0) {
+      await prisma.amortizationEntry.createMany({
+        data: entries.map(e => ({ ...e, debtId: debt.id })),
+      });
+    }
+
+    res.json(adjustment);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+router.get('/:id/balance-adjustments', async (req, res) => {
+  try {
+    const debt = await prisma.debt.findFirst({ where: { id: Number(req.params.id), userId: req.userId } });
+    if (!debt) return res.status(404).json({ error: 'Debt not found.' });
+
+    const adjustments = await prisma.balanceAdjustment.findMany({
+      where: { debtId: debt.id },
+      orderBy: { date: 'desc' },
+    });
+
+    res.json(adjustments);
   } catch (err) {
     res.status(500).json({ error: 'Server error.' });
   }

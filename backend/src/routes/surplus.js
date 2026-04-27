@@ -12,7 +12,11 @@ router.get('/:month', async (req, res) => {
     const monthStart = new Date(year, m - 1, 1);
     const monthEnd = new Date(year, m, 1);
 
-    const [incomeEntries, transactions, debtPayments, debts, existing] = await Promise.all([
+    // Previous month key for carryover lookup
+    const prevDate = new Date(year, m - 2, 1);
+    const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+
+    const [incomeEntries, transactions, debtPayments, debts, existing, prevAllocation] = await Promise.all([
       prisma.incomeEntry.findMany({
         where: { userId: req.userId, date: { gte: monthStart, lt: monthEnd } },
       }),
@@ -29,12 +33,19 @@ router.get('/:month', async (req, res) => {
       prisma.surplusAllocation.findUnique({
         where: { userId_month: { userId: req.userId, month } },
       }),
+      prisma.surplusAllocation.findUnique({
+        where: { userId_month: { userId: req.userId, month: prevMonth } },
+      }),
     ]);
 
     const totalIncome = incomeEntries.reduce((s, e) => s + Number(e.amountPhp), 0);
     const totalExpenses = transactions.reduce((s, t) => s + Number(t.amount), 0);
     const totalDebtPaid = debtPayments.reduce((s, p) => s + Number(p.amount), 0);
-    const surplus = totalIncome - totalExpenses - totalDebtPaid;
+    const computedSurplus = totalIncome - totalExpenses - totalDebtPaid;
+
+    // Add previous month's unallocated carryover
+    const carryover = prevAllocation ? Number(prevAllocation.carryover ?? 0) : 0;
+    const surplus = computedSurplus + carryover;
 
     const suggestion = autoSplit(surplus, debts);
 
@@ -44,6 +55,7 @@ router.get('/:month', async (req, res) => {
       totalExpenses,
       totalDebtPaid,
       surplus,
+      carryover,
       debts: debts.map(d => ({
         id: d.id,
         name: d.name,
@@ -64,12 +76,16 @@ router.get('/:month', async (req, res) => {
 router.post('/:month/confirm', async (req, res) => {
   try {
     const { month } = req.params;
-    const { allocations, totalSurplus } = req.body;
+    const { allocations, totalSurplus, totalGoalAllocated } = req.body;
+
+    const totalDebtAllocated = allocations.reduce((s, a) => s + (Number(a.amount) || 0), 0);
+    const goalAllocated = Number(totalGoalAllocated) || 0;
+    const leftover = Math.max(0, totalSurplus - totalDebtAllocated - goalAllocated);
 
     const saved = await prisma.surplusAllocation.upsert({
       where: { userId_month: { userId: req.userId, month } },
-      update: { allocations, totalSurplus, confirmedAt: new Date() },
-      create: { userId: req.userId, month, allocations, totalSurplus, confirmedAt: new Date() },
+      update: { allocations, totalSurplus, confirmedAt: new Date(), carryover: leftover },
+      create: { userId: req.userId, month, allocations, totalSurplus, confirmedAt: new Date(), carryover: leftover },
     });
 
     res.json(saved);

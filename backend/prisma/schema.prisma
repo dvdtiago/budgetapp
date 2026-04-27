@@ -24,6 +24,8 @@ model User {
   settings           Settings?
   goals              Goal[]
   goalContributions  GoalContribution[]
+  paymentMethods     PaymentMethod[]
+  balanceAdjustments BalanceAdjustment[]
 
   @@map("users")
 }
@@ -55,9 +57,11 @@ model Debt {
   clearDate        DateTime?  @map("clear_date")
   createdAt        DateTime   @default(now()) @map("created_at")
 
-  user         User                @relation(fields: [userId], references: [id])
-  amortization AmortizationEntry[]
-  payments     DebtPayment[]
+  user               User                @relation(fields: [userId], references: [id])
+  amortization       AmortizationEntry[]
+  payments           DebtPayment[]
+  paymentMethod      PaymentMethod?
+  balanceAdjustments BalanceAdjustment[]
 
   @@map("debts")
 }
@@ -121,17 +125,40 @@ model BudgetCategory {
   @@map("budget_categories")
 }
 
-model Transaction {
-  id          Int      @id @default(autoincrement())
-  userId      Int      @map("user_id")
-  categoryId  Int?     @map("category_id")
-  amount      Decimal  @db.Decimal(14, 2)
-  description String?
-  date        DateTime
-  createdAt   DateTime @default(now()) @map("created_at")
+enum PaymentMethodType {
+  CREDIT_CARD
+  CASH
+  BANK_ACCOUNT
+  E_WALLET
+}
 
-  user     User            @relation(fields: [userId], references: [id])
-  category BudgetCategory? @relation(fields: [categoryId], references: [id])
+model PaymentMethod {
+  id     Int               @id @default(autoincrement())
+  userId Int               @map("user_id")
+  name   String
+  type   PaymentMethodType
+  debtId Int?              @unique @map("debt_id")
+
+  user         User          @relation(fields: [userId], references: [id])
+  debt         Debt?         @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@map("payment_methods")
+}
+
+model Transaction {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @map("user_id")
+  categoryId      Int?     @map("category_id")
+  paymentMethodId Int?     @map("payment_method_id")
+  amount          Decimal  @db.Decimal(14, 2)
+  description     String?
+  date            DateTime
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user          User            @relation(fields: [userId], references: [id])
+  category      BudgetCategory? @relation(fields: [categoryId], references: [id])
+  paymentMethod PaymentMethod?  @relation(fields: [paymentMethodId], references: [id], onDelete: SetNull)
 
   @@map("transactions")
 }
@@ -151,12 +178,29 @@ model DebtPayment {
   @@map("debt_payments")
 }
 
+model BalanceAdjustment {
+  id              Int      @id @default(autoincrement())
+  debtId          Int      @map("debt_id")
+  userId          Int      @map("user_id")
+  previousBalance Decimal  @map("previous_balance") @db.Decimal(14, 2)
+  newBalance      Decimal  @map("new_balance") @db.Decimal(14, 2)
+  date            DateTime
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  debt Debt @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("balance_adjustments")
+}
+
 model SurplusAllocation {
   id           Int       @id @default(autoincrement())
   userId       Int       @map("user_id")
   month        String
   totalSurplus Decimal   @map("total_surplus") @db.Decimal(14, 2)
   allocations  Json
+  carryover    Decimal?  @db.Decimal(14, 2)
   confirmedAt  DateTime? @map("confirmed_at")
   createdAt    DateTime  @default(now()) @map("created_at")
 

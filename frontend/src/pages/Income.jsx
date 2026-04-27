@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Pencil, X, Check } from 'lucide-react';
 import api from '../lib/api.js';
 import { formatPHP, formatDate } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
@@ -9,16 +9,84 @@ const INCOME_TYPES = [
   { value: 'COMMISSION', label: 'Commission / one-time' },
 ];
 
+function emptyForm() {
+  return {
+    originalAmount: '', originalCurrency: 'PHP', exchangeRate: '',
+    type: 'REGULAR', description: '',
+    date: new Date().toISOString().slice(0, 10),
+  };
+}
+
+function IncomeForm({ initial, onSave, onCancel, saving }) {
+  const [form, setForm] = useState(initial ?? emptyForm());
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
+
+  async function submit(e) {
+    e.preventDefault();
+    await onSave(form);
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="label">Type</label>
+          <select className="input" value={form.type} onChange={e => set('type', e.target.value)}>
+            {INCOME_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="label">Currency</label>
+          <select className="input" value={form.originalCurrency} onChange={e => set('originalCurrency', e.target.value)}>
+            <option value="PHP">PHP (₱)</option>
+            <option value="USD">USD ($)</option>
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="label">Amount {form.originalCurrency === 'USD' ? '($)' : '(₱)'}</label>
+          <input className="input" type="number" min="0" step="0.01" value={form.originalAmount} onChange={e => set('originalAmount', e.target.value)} placeholder="0.00" required />
+        </div>
+        {form.originalCurrency === 'USD' && (
+          <div>
+            <label className="label">Exchange rate (₱ per $1)</label>
+            <input className="input" type="number" min="0" step="0.0001" value={form.exchangeRate} onChange={e => set('exchangeRate', e.target.value)} placeholder="e.g. 58.50" required />
+            <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">Check <a href="https://google.com/finance/quote/USD-PHP" target="_blank" rel="noopener noreferrer" className="underline hover:text-brand-500">Google Finance</a> for today's rate.</p>
+          </div>
+        )}
+      </div>
+      {form.originalCurrency === 'USD' && form.originalAmount && form.exchangeRate && (
+        <p className="text-xs text-neutral-400 dark:text-neutral-400">
+          = {formatPHP(Number(form.originalAmount) * Number(form.exchangeRate))} PHP
+        </p>
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="label">Date</label>
+          <input className="input" type="date" value={form.date} onChange={e => set('date', e.target.value)} required />
+        </div>
+        <div>
+          <label className="label">Description (optional)</label>
+          <input className="input" value={form.description} onChange={e => set('description', e.target.value)} placeholder="e.g. November salary" />
+        </div>
+      </div>
+      <div className="flex gap-2 pt-1">
+        <button type="button" onClick={onCancel} className="btn-secondary flex-1">Cancel</button>
+        <button type="submit" disabled={saving} className="btn-primary flex-1">
+          {saving ? 'Saving…' : 'Save'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function Income() {
   const { month } = useMonth();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({
-    originalAmount: '', originalCurrency: 'PHP', exchangeRate: '',
-    type: 'REGULAR', description: '',
-    date: new Date().toISOString().slice(0, 10),
-  });
+  const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
 
   async function load() {
@@ -30,15 +98,22 @@ export default function Income() {
 
   useEffect(() => { load(); }, [month]);
 
-  function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
-
-  async function submit(e) {
-    e.preventDefault();
+  async function create(form) {
     setSaving(true);
     try {
       await api.post('/income', form);
-      setForm({ originalAmount: '', originalCurrency: 'PHP', exchangeRate: '', type: 'REGULAR', description: '', date: new Date().toISOString().slice(0, 10) });
       setShowForm(false);
+      load();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function update(id, form) {
+    setSaving(true);
+    try {
+      await api.put(`/income/${id}`, form);
+      setEditingId(null);
       load();
     } finally {
       setSaving(false);
@@ -60,7 +135,7 @@ export default function Income() {
       <div>
         <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Income</h1>
         <p className="text-sm text-neutral-400 dark:text-neutral-400">All amounts shown in Philippine Peso (₱)</p>
-        <button onClick={() => setShowForm(s => !s)} className="btn-primary mt-3">
+        <button onClick={() => { setShowForm(s => !s); setEditingId(null); }} className="btn-primary mt-3">
           <Plus size={15} /> Log income
         </button>
       </div>
@@ -81,61 +156,11 @@ export default function Income() {
         </div>
       </div>
 
-      {/* Form */}
+      {/* Add form */}
       {showForm && (
         <div className="card">
           <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 mb-4">Log income</h2>
-          <form onSubmit={submit} className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="label">Type</label>
-                <select className="input" value={form.type} onChange={e => set('type', e.target.value)}>
-                  {INCOME_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="label">Currency</label>
-                <select className="input" value={form.originalCurrency} onChange={e => set('originalCurrency', e.target.value)}>
-                  <option value="PHP">PHP (₱)</option>
-                  <option value="USD">USD ($)</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="label">Amount {form.originalCurrency === 'USD' ? '($)' : '(₱)'}</label>
-                <input className="input" type="number" min="0" step="0.01" value={form.originalAmount} onChange={e => set('originalAmount', e.target.value)} placeholder="0.00" required />
-              </div>
-              {form.originalCurrency === 'USD' && (
-                <div>
-                  <label className="label">Exchange rate (₱ per $1)</label>
-                  <input className="input" type="number" min="0" step="0.0001" value={form.exchangeRate} onChange={e => set('exchangeRate', e.target.value)} placeholder="e.g. 58.50" required />
-                  <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">Check <a href="https://google.com/finance/quote/USD-PHP" target="_blank" rel="noopener noreferrer" className="underline hover:text-brand-500">Google Finance</a> for today's rate.</p>
-                </div>
-              )}
-            </div>
-            {form.originalCurrency === 'USD' && form.originalAmount && form.exchangeRate && (
-              <p className="text-xs text-neutral-400 dark:text-neutral-400">
-                = {formatPHP(Number(form.originalAmount) * Number(form.exchangeRate))} PHP
-              </p>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="label">Date</label>
-                <input className="input" type="date" value={form.date} onChange={e => set('date', e.target.value)} required />
-              </div>
-              <div>
-                <label className="label">Description (optional)</label>
-                <input className="input" value={form.description} onChange={e => set('description', e.target.value)} placeholder="e.g. November salary" />
-              </div>
-            </div>
-            <div className="flex gap-2 pt-1">
-              <button type="button" onClick={() => setShowForm(false)} className="btn-secondary flex-1">Cancel</button>
-              <button type="submit" disabled={saving} className="btn-primary flex-1">
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </form>
+          <IncomeForm onSave={create} onCancel={() => setShowForm(false)} saving={saving} />
         </div>
       )}
 
@@ -153,24 +178,55 @@ export default function Income() {
       ) : (
         <div className="space-y-2">
           {entries.map(e => (
-            <div key={e.id} className="card flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-bold">
-                {e.type === 'COMMISSION' ? '★' : '₱'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100">{e.description || (e.type === 'REGULAR' ? 'Regular income' : 'Commission')}</p>
-                <p className="text-xs text-neutral-400 dark:text-neutral-400">
-                  {formatDate(e.date)}
-                  {e.originalCurrency === 'USD' && ` · $${Number(e.originalAmount).toLocaleString()} @ ₱${Number(e.exchangeRate).toFixed(2)}`}
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-sm font-semibold text-green-600 dark:text-green-400">{formatPHP(e.amountPhp)}</p>
-                {e.originalCurrency === 'USD' && <p className="text-xs text-neutral-400 dark:text-neutral-400">${Number(e.originalAmount).toLocaleString()}</p>}
-              </div>
-              <button onClick={() => deleteEntry(e.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 ml-1">
-                <Trash2 size={15} />
-              </button>
+            <div key={e.id} className="card">
+              {editingId === e.id ? (
+                <>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">Edit entry</p>
+                    <button onClick={() => setEditingId(null)} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                      <X size={15} />
+                    </button>
+                  </div>
+                  <IncomeForm
+                    initial={{
+                      originalAmount: String(e.originalAmount),
+                      originalCurrency: e.originalCurrency,
+                      exchangeRate: e.originalCurrency === 'USD' ? String(e.exchangeRate) : '',
+                      type: e.type,
+                      description: e.description || '',
+                      date: new Date(e.date).toISOString().slice(0, 10),
+                    }}
+                    onSave={form => update(e.id, form)}
+                    onCancel={() => setEditingId(null)}
+                    saving={saving}
+                  />
+                </>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-sm font-bold">
+                    {e.type === 'COMMISSION' ? '★' : '₱'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100">{e.description || (e.type === 'REGULAR' ? 'Regular income' : 'Commission')}</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-400">
+                      {formatDate(e.date)}
+                      {e.originalCurrency === 'USD' && ` · $${Number(e.originalAmount).toLocaleString()} @ ₱${Number(e.exchangeRate).toFixed(2)}`}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold text-green-600 dark:text-green-400">{formatPHP(e.amountPhp)}</p>
+                    {e.originalCurrency === 'USD' && <p className="text-xs text-neutral-400 dark:text-neutral-400">${Number(e.originalAmount).toLocaleString()}</p>}
+                  </div>
+                  <div className="flex items-center gap-1 ml-1 shrink-0">
+                    <button onClick={() => { setEditingId(e.id); setShowForm(false); }} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                      <Pencil size={14} />
+                    </button>
+                    <button onClick={() => deleteEntry(e.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
