@@ -115,7 +115,7 @@ export default function Transactions() {
         <div className="card">
           <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 mb-4">New entry</h2>
           <form onSubmit={submitNewEntry} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Type</label>
                 <select
@@ -148,7 +148,7 @@ export default function Transactions() {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Amount (₱)</label>
                 <input

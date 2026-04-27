@@ -205,7 +205,7 @@ export default function Budget() {
         <div className="card">
           <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 mb-4">Log an expense</h2>
           <form onSubmit={addTransaction} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Category</label>
                 <select className="input" value={txForm.categoryId} onChange={e => setTxForm(f => ({ ...f, categoryId: e.target.value }))}>
@@ -219,7 +219,7 @@ export default function Budget() {
                 <input className="input" type="number" min="0" step="0.01" value={txForm.amount} onChange={e => setTxForm(f => ({ ...f, amount: e.target.value }))} required />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Description (optional)</label>
                 <input className="input" value={txForm.description} onChange={e => setTxForm(f => ({ ...f, description: e.target.value }))} placeholder="e.g. Grocery run" />
@@ -288,7 +288,7 @@ export default function Budget() {
 
                 {payingDebtId === debt.id && (
                   <form onSubmit={e => logDebtPayment(debt.id, e)} className="mt-3 space-y-3 pt-3 border-t border-neutral-100 dark:border-neutral-700">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="label">Amount (₱)</label>
                         <input className="input" type="number" min="0" step="0.01" value={debtPayForm.amount} onChange={e => setDebtPayForm(f => ({ ...f, amount: e.target.value }))} placeholder={String(min)} required />
@@ -332,7 +332,7 @@ export default function Budget() {
           <div className="card mb-3">
             <h3 className="font-medium text-neutral-800 dark:text-neutral-100 mb-3">New category</h3>
             <form onSubmit={saveCategory} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="label">Name</label>
                   <input className="input" value={catForm.name} onChange={e => setCatForm(f => ({ ...f, name: e.target.value }))} required />
@@ -342,7 +342,7 @@ export default function Budget() {
                   <input className="input" type="number" min="0" step="0.01" value={catForm.monthlyAllocation} onChange={e => setCatForm(f => ({ ...f, monthlyAllocation: e.target.value }))} required />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="label">Icon (emoji)</label>
                   <input className="input" value={catForm.icon} onChange={e => setCatForm(f => ({ ...f, icon: e.target.value }))} placeholder="🛒" maxLength={2} />
@@ -407,7 +407,7 @@ export default function Budget() {
                       <h3 className="font-medium text-neutral-800 dark:text-neutral-100 text-sm">Edit — {cat.name}</h3>
                       <button type="button" onClick={cancelEdit} className="p-1 rounded text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700"><X size={14} /></button>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="label">Name</label>
                         <input className="input" value={catForm.name} onChange={e => setCatForm(f => ({ ...f, name: e.target.value }))} required />
@@ -417,7 +417,7 @@ export default function Budget() {
                         <input className="input" type="number" min="0" step="0.01" value={catForm.monthlyAllocation} onChange={e => setCatForm(f => ({ ...f, monthlyAllocation: e.target.value }))} required />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="label">Icon (emoji)</label>
                         <input className="input" value={catForm.icon} onChange={e => setCatForm(f => ({ ...f, icon: e.target.value }))} placeholder="🛒" maxLength={2} />

@@ -40,7 +40,7 @@ export default function EditTransactionModal({ tx, categories, onSave, onClose }
               {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="label">Amount (₱)</label>
               <input

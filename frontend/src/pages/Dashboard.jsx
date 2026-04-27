@@ -3,18 +3,21 @@ import { Link } from 'react-router-dom';
 import { TrendingDown, TrendingUp, Wallet, Target, ChevronRight, Plus, CalendarClock, AlertCircle, ShoppingBag, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../lib/api.js';
-import { formatPHP, formatDate, formatPercent, debtTypeLabel } from '../lib/utils.js';
+import { formatPHP, formatPHPShort, formatDate, formatPercent, debtTypeLabel } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
 import SurplusModal from '../components/SurplusModal.jsx';
 
-function StatCard({ label, value, sub, color = 'text-neutral-800 dark:text-neutral-100', icon }) {
+function StatCard({ label, amount, sub, color = 'text-neutral-800 dark:text-neutral-100', icon }) {
   return (
-    <div className="card flex items-start gap-3">
-      {icon && <div className="mt-0.5 text-neutral-300 dark:text-neutral-600">{icon}</div>}
-      <div className="min-w-0">
-        <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-0.5">{label}</p>
-        <p className={`text-xl font-bold truncate ${color}`}>{value}</p>
-        {sub && <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5">{sub}</p>}
+    <div className="card flex items-start gap-2 sm:gap-3">
+      {icon && <div className="mt-0.5 text-neutral-300 dark:text-neutral-600 hidden sm:block">{icon}</div>}
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-0.5 leading-tight">{label}</p>
+        <p className={`font-bold truncate ${color}`}>
+          <span className="text-base sm:hidden">{formatPHPShort(amount)}</span>
+          <span className="hidden sm:inline text-xl">{formatPHP(amount)}</span>
+        </p>
+        {sub && <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5 leading-tight">{sub}</p>}
       </div>
     </div>
   );
@@ -76,19 +79,19 @@ export default function Dashboard() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label="Income this month" value={formatPHP(thisMonth.income)} icon={<Wallet size={18} />} />
-        <StatCard label="Expenses logged" value={formatPHP(thisMonth.spent)} icon={<TrendingDown size={18} />} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard label="Income this month" amount={thisMonth.income} icon={<Wallet size={18} />} />
+        <StatCard label="Expenses logged" amount={thisMonth.spent} icon={<TrendingDown size={18} />} />
         <StatCard
           label="Leftover Cash"
-          value={formatPHP(thisMonth.surplus)}
+          amount={thisMonth.surplus}
           icon={<TrendingUp size={18} />}
           color={thisMonth.surplus >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}
-          sub={`${formatPHP(thisMonth.debtPaid ?? 0)} paid to debts`}
+          sub={`${formatPHPShort(thisMonth.debtPaid ?? 0)} to debts`}
         />
         <StatCard
           label="Total debt remaining"
-          value={formatPHP(debts.totalRemaining)}
+          amount={debts.totalRemaining}
           icon={<Target size={18} />}
           color="text-red-500 dark:text-red-400"
           sub={`${formatPercent(debts.percentPaid)} paid off`}

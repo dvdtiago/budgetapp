@@ -126,7 +126,7 @@ export default function Settings() {
                   placeholder="you@example.com"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="label">Frequency</label>
                   <select className="input" value={settings.reminderFrequency} onChange={e => set('reminderFrequency', e.target.value)}>

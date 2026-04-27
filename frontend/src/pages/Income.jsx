@@ -86,7 +86,7 @@ export default function Income() {
         <div className="card">
           <h2 className="font-semibold text-neutral-800 dark:text-neutral-100 mb-4">Log income</h2>
           <form onSubmit={submit} className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Type</label>
                 <select className="input" value={form.type} onChange={e => set('type', e.target.value)}>
@@ -101,7 +101,7 @@ export default function Income() {
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Amount {form.originalCurrency === 'USD' ? '($)' : '(₱)'}</label>
                 <input className="input" type="number" min="0" step="0.01" value={form.originalAmount} onChange={e => set('originalAmount', e.target.value)} placeholder="0.00" required />
@@ -119,7 +119,7 @@ export default function Income() {
                 = {formatPHP(Number(form.originalAmount) * Number(form.exchangeRate))} PHP
               </p>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Date</label>
                 <input className="input" type="date" value={form.date} onChange={e => set('date', e.target.value)} required />
