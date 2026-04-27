@@ -45,7 +45,7 @@ function DebtForm({ initial, onSave, onCancel }) {
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Debt name</label>
           <input className="input" value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. BDO Credit Card" required />
@@ -55,7 +55,7 @@ function DebtForm({ initial, onSave, onCancel }) {
           <input className="input" value={form.provider} onChange={e => set('provider', e.target.value)} placeholder="e.g. BDO" />
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Type</label>
           <select className="input" value={form.type} onChange={e => set('type', e.target.value)}>
@@ -70,7 +70,7 @@ function DebtForm({ initial, onSave, onCancel }) {
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Current balance (₱)</label>
           <input className="input" type="number" min="0" step="0.01" value={form.currentBalance} onChange={e => set('currentBalance', e.target.value)} required />
@@ -82,7 +82,7 @@ function DebtForm({ initial, onSave, onCancel }) {
           <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">{hints.original}</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Interest rate (% per year)</label>
           <input className="input" type="number" min="0" step="0.01" value={form.interestRate} onChange={e => set('interestRate', e.target.value)} placeholder="e.g. 24" required />
@@ -94,7 +94,7 @@ function DebtForm({ initial, onSave, onCancel }) {
           <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">{isCC ? 'Smallest amount you must pay each month to avoid penalties.' : 'Fixed monthly repayment amount.'}</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Target clear date (optional)</label>
           <input className="input" type="date" value={form.clearDate} onChange={e => set('clearDate', e.target.value)} />
@@ -126,7 +126,7 @@ function PaymentForm({ debt, onSave, onCancel }) {
   return (
     <form onSubmit={submit} className="space-y-3 bg-neutral-50 rounded-xl p-4 mt-3">
       <p className="text-sm font-medium text-neutral-700">Log a payment for {debt.name}</p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Amount (₱)</label>
           <input className="input" type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder={String(debt.minPayment)} required />
@@ -169,13 +169,15 @@ function AmortizationTable({ debtId }) {
 
   return (
     <div className="mt-3 bg-neutral-50 rounded-xl p-4">
-      <div className="flex items-center gap-3 mb-3">
-        <p className="text-sm font-medium text-neutral-700 flex-1">Payoff Timeline</p>
-        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input w-auto text-xs" />
-        <button onClick={generate} disabled={generating} className="btn-primary text-xs">
-          <Zap size={13} />
-          {generating ? 'Generating…' : entries?.length ? 'Regenerate' : 'Generate'}
-        </button>
+      <div className="mb-3">
+        <p className="text-sm font-medium text-neutral-700 mb-2">Payoff Timeline</p>
+        <div className="flex items-center gap-2">
+          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input w-auto text-xs flex-1" />
+          <button onClick={generate} disabled={generating} className="btn-primary text-xs shrink-0">
+            <Zap size={13} />
+            {generating ? 'Generating…' : entries?.length ? 'Regenerate' : 'Generate'}
+          </button>
+        </div>
       </div>
       {entries && entries.length > 0 ? (
         <div className="overflow-x-auto">

@@ -66,18 +66,18 @@ export default function Income() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="card text-center">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="card text-center col-span-2 sm:col-span-1">
           <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Total income</p>
-          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalIncome)}</p>
+          <p className="text-base font-bold text-neutral-800 dark:text-neutral-100 truncate">{formatPHP(totalIncome)}</p>
         </div>
         <div className="card text-center">
           <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Regular</p>
-          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(regular)}</p>
+          <p className="text-base font-bold text-neutral-800 dark:text-neutral-100 truncate">{formatPHP(regular)}</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Commissions</p>
-          <p className="text-lg font-bold text-green-600 dark:text-green-400">{formatPHP(commissions)}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Other</p>
+          <p className="text-base font-bold text-green-600 dark:text-green-400 truncate">{formatPHP(commissions)}</p>
         </div>
       </div>
 

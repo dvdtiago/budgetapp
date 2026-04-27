@@ -164,12 +164,10 @@ export default function Budget() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Budget</h1>
-          <p className="text-sm text-neutral-400 dark:text-neutral-400">Expenses and debt payments in one place</p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
+      <div>
+        <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Budget</h1>
+        <p className="text-sm text-neutral-400 dark:text-neutral-400">Expenses and debt payments in one place</p>
+        <div className="flex items-center gap-2 mt-3">
           <button onClick={() => setShowSurplus(true)} className="btn-secondary">
             <Target size={15} /> Leftover Cash
           </button>
@@ -180,23 +178,23 @@ export default function Budget() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card text-center">
           <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Total budgeted</p>
-          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalBudgeted)}</p>
+          <p className="text-base font-bold text-neutral-800 dark:text-neutral-100 truncate">{formatPHP(totalBudgeted)}</p>
           <p className="text-xs text-neutral-400 dark:text-neutral-400">expenses + min payments</p>
         </div>
         <div className="card text-center">
           <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Expenses spent</p>
-          <p className={`text-lg font-bold ${totalExpenses > totalAllocated ? 'text-red-500' : 'text-neutral-800 dark:text-neutral-100'}`}>{formatPHP(totalExpenses)}</p>
+          <p className={`text-base font-bold truncate ${totalExpenses > totalAllocated ? 'text-red-500' : 'text-neutral-800 dark:text-neutral-100'}`}>{formatPHP(totalExpenses)}</p>
         </div>
         <div className="card text-center">
           <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Debt payments made</p>
-          <p className="text-lg font-bold text-brand-600">{formatPHP(totalDebtPaid)}</p>
+          <p className="text-base font-bold text-brand-600 truncate">{formatPHP(totalDebtPaid)}</p>
         </div>
         <div className="card text-center">
           <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Total out</p>
-          <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalExpenses + totalDebtPaid)}</p>
+          <p className="text-base font-bold text-neutral-800 dark:text-neutral-100 truncate">{formatPHP(totalExpenses + totalDebtPaid)}</p>
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { TrendingDown, TrendingUp, Wallet, Target, ChevronRight, Plus, CalendarClock, AlertCircle, ShoppingBag, CreditCard } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '../lib/api.js';
-import { formatPHP, formatPHPShort, formatDate, formatPercent, debtTypeLabel } from '../lib/utils.js';
+import { formatPHP, formatPHPWhole, formatDate, formatPercent, debtTypeLabel } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
 import SurplusModal from '../components/SurplusModal.jsx';
 
@@ -13,10 +13,7 @@ function StatCard({ label, amount, sub, color = 'text-neutral-800 dark:text-neut
       {icon && <div className="mt-0.5 text-neutral-300 dark:text-neutral-600 hidden sm:block">{icon}</div>}
       <div className="min-w-0 flex-1">
         <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-0.5 leading-tight">{label}</p>
-        <p className={`font-bold truncate ${color}`}>
-          <span className="text-base sm:hidden">{formatPHPShort(amount)}</span>
-          <span className="hidden sm:inline text-xl">{formatPHP(amount)}</span>
-        </p>
+        <p className={`text-lg font-bold truncate ${color}`}>{formatPHPWhole(amount)}</p>
         {sub && <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5 leading-tight">{sub}</p>}
       </div>
     </div>
@@ -87,7 +84,7 @@ export default function Dashboard() {
           amount={thisMonth.surplus}
           icon={<TrendingUp size={18} />}
           color={thisMonth.surplus >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}
-          sub={`${formatPHPShort(thisMonth.debtPaid ?? 0)} to debts`}
+          sub={`${formatPHPWhole(thisMonth.debtPaid ?? 0)} to debts`}
         />
         <StatCard
           label="Total debt remaining"
