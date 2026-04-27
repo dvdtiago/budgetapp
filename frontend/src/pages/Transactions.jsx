@@ -246,16 +246,65 @@ export default function Transactions() {
         ))}
       </div>
 
-      {/* Table */}
-      <div className="card p-0 overflow-hidden">
+      {/* Mobile list */}
+      <div className="sm:hidden card p-0 divide-y divide-neutral-100 dark:divide-neutral-800 overflow-hidden">
+        {filtered.length === 0 ? (
+          <div className="text-center py-12 text-neutral-400 dark:text-neutral-500">
+            <p className="text-sm font-medium">No entries yet</p>
+            <p className="text-xs mt-1">Use "+ Add entry" above to log an expense or debt payment.</p>
+          </div>
+        ) : filtered.map(entry => (
+          <div key={`${entry._type}-${entry.id}`} className="flex items-center gap-3 px-4 py-3.5">
+            <div className="flex-1 min-w-0">
+              <div className="mb-1.5">
+                {entry._type === 'expense' ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300">
+                    <ShoppingBag size={11} />
+                    {entry.category?.name || 'Expense'}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300">
+                    <CreditCard size={11} />
+                    {entry.debtName}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate">
+                {entry._type === 'expense'
+                  ? (entry.description || entry.category?.name || 'Expense')
+                  : (entry.notes || 'Debt payment')}
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
+                {formatPHP(entry.amount)}
+              </p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">{formatDate(entry.date)}</p>
+              {entry._type === 'expense' && (
+                <div className="flex items-center justify-end gap-1 mt-1">
+                  <button onClick={() => setEditingTx(entry)} className="p-1 rounded text-neutral-300 hover:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                    <Pencil size={12} />
+                  </button>
+                  <button onClick={() => deleteTx(entry.id)} className="p-1 rounded text-neutral-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden sm:block card p-0 overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-neutral-100 dark:border-neutral-700">
-              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Type</th>
+              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 w-40">Type</th>
               <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Description</th>
-              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 hidden sm:table-cell">Date</th>
-              <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Amount</th>
-              <th className="px-4 py-3 w-16 hidden sm:table-cell"></th>
+              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 w-32">Date</th>
+              <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 w-32">Amount</th>
+              <th className="px-4 py-3 w-16"></th>
             </tr>
           </thead>
           <tbody>
@@ -269,7 +318,7 @@ export default function Transactions() {
             ) : (
               filtered.map(entry => (
                 <tr key={`${entry._type}-${entry.id}`} className="border-b border-neutral-100 dark:border-neutral-800 last:border-0 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 w-40">
                     {entry._type === 'expense' ? (
                       <span className="inline-flex items-center gap-1.5 text-sm px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 whitespace-nowrap">
                         <ShoppingBag size={12} />
@@ -288,27 +337,16 @@ export default function Transactions() {
                         ? (entry.description || entry.category?.name || 'Expense')
                         : (entry.notes || 'Debt payment')}
                     </p>
-                    <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5 sm:hidden">{formatDate(entry.date)}</p>
                   </td>
-                  <td className="px-4 py-4 hidden sm:table-cell">
+                  <td className="px-4 py-4 w-32">
                     <p className="text-sm text-neutral-500 dark:text-neutral-400">{formatDate(entry.date)}</p>
                   </td>
-                  <td className="px-4 py-4 text-right">
+                  <td className="px-4 py-4 text-right w-32">
                     <span className={`text-sm font-semibold ${entry._type === 'payment' ? 'text-brand-600 dark:text-brand-400' : 'text-neutral-800 dark:text-neutral-100'}`}>
                       {formatPHP(entry.amount)}
                     </span>
-                    {entry._type === 'expense' && (
-                      <div className="flex items-center justify-end gap-1 mt-1 sm:hidden">
-                        <button onClick={() => setEditingTx(entry)} className="p-1 rounded text-neutral-300 hover:text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                          <Pencil size={12} />
-                        </button>
-                        <button onClick={() => deleteTx(entry.id)} className="p-1 rounded text-neutral-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
-                    )}
                   </td>
-                  <td className="px-4 py-4 hidden sm:table-cell">
+                  <td className="px-4 py-4 w-16">
                     {entry._type === 'expense' && (
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => setEditingTx(entry)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
