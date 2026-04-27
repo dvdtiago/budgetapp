@@ -84,7 +84,9 @@ export default function Dashboard() {
           amount={thisMonth.surplus}
           icon={<TrendingUp size={18} />}
           color={thisMonth.surplus >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}
-          sub={`${formatPHPWhole(thisMonth.debtPaid ?? 0)} to debts`}
+          sub={thisMonth.carryover > 0
+            ? `incl. ${formatPHPWhole(thisMonth.carryover)} rolled over`
+            : `${formatPHPWhole(thisMonth.debtPaid ?? 0)} to debts`}
         />
         <StatCard
           label="Total debt remaining"

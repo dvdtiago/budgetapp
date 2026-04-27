@@ -22,7 +22,12 @@ router.get('/', async (req, res) => {
     const in30Days = new Date(now);
     in30Days.setDate(in30Days.getDate() + 30);
 
-    const [incomeEntries, transactions, monthDebtPayments, debts, settings, recentTransactions, goals, upcomingAmortization] = await Promise.all([
+    // Look back up to 24 months to accumulate unspent surplus (carryover wallet)
+    const historyStart = new Date(monthStart.getFullYear(), monthStart.getMonth() - 24, 1);
+
+    const [incomeEntries, transactions, monthDebtPayments,
+           histIncome, histExpenses, histDebtPayments,
+           debts, settings, recentTransactions, goals, upcomingAmortization] = await Promise.all([
       prisma.incomeEntry.findMany({
         where: { userId: req.userId, date: { gte: monthStart, lt: monthEnd } },
       }),
@@ -31,6 +36,18 @@ router.get('/', async (req, res) => {
       }),
       prisma.debtPayment.findMany({
         where: { userId: req.userId, date: { gte: monthStart, lt: monthEnd } },
+      }),
+      prisma.incomeEntry.findMany({
+        where: { userId: req.userId, date: { gte: historyStart, lt: monthStart } },
+        select: { amountPhp: true },
+      }),
+      prisma.transaction.findMany({
+        where: { userId: req.userId, date: { gte: historyStart, lt: monthStart } },
+        select: { amount: true },
+      }),
+      prisma.debtPayment.findMany({
+        where: { userId: req.userId, date: { gte: historyStart, lt: monthStart } },
+        select: { amount: true },
       }),
       prisma.debt.findMany({
         where: { userId: req.userId, status: { not: 'PAID_OFF' } },
@@ -61,7 +78,15 @@ router.get('/', async (req, res) => {
     const totalIncome = incomeEntries.reduce((s, e) => s + Number(e.amountPhp), 0);
     const totalSpent = transactions.reduce((s, t) => s + Number(t.amount), 0);
     const totalDebtPaid = monthDebtPayments.reduce((s, p) => s + Number(p.amount), 0);
-    const surplus = totalIncome - totalSpent - totalDebtPaid;
+    const thisMonthSurplus = totalIncome - totalSpent - totalDebtPaid;
+
+    // Carryover wallet: accumulated unspent net from all previous months
+    const histTotalIncome = histIncome.reduce((s, e) => s + Number(e.amountPhp), 0);
+    const histTotalExpenses = histExpenses.reduce((s, t) => s + Number(t.amount), 0);
+    const histTotalDebtPaid = histDebtPayments.reduce((s, p) => s + Number(p.amount), 0);
+    const carryover = Math.max(0, histTotalIncome - histTotalExpenses - histTotalDebtPaid);
+
+    const surplus = thisMonthSurplus + carryover;
 
     const activeDebts = debts.filter(d => d.status === 'ACTIVE');
     const totalDebtRemaining = activeDebts.reduce((s, d) => s + Number(d.currentBalance), 0);
@@ -128,6 +153,7 @@ router.get('/', async (req, res) => {
         spent: totalSpent,
         debtPaid: totalDebtPaid,
         surplus,
+        carryover,
       },
       debts: {
         totalRemaining: totalDebtRemaining,

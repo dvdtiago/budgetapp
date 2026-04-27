@@ -12,11 +12,12 @@ router.get('/:month', async (req, res) => {
     const monthStart = new Date(year, m - 1, 1);
     const monthEnd = new Date(year, m, 1);
 
-    // Previous month key for carryover lookup
-    const prevDate = new Date(year, m - 2, 1);
-    const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+    // Look back up to 24 months to accumulate unspent surplus
+    const historyStart = new Date(year, m - 25, 1);
 
-    const [incomeEntries, transactions, debtPayments, debts, existing, prevAllocation] = await Promise.all([
+    const [incomeEntries, transactions, debtPayments,
+           histIncome, histExpenses, histDebtPayments,
+           debts, existing] = await Promise.all([
       prisma.incomeEntry.findMany({
         where: { userId: req.userId, date: { gte: monthStart, lt: monthEnd } },
       }),
@@ -26,15 +27,24 @@ router.get('/:month', async (req, res) => {
       prisma.debtPayment.findMany({
         where: { userId: req.userId, date: { gte: monthStart, lt: monthEnd } },
       }),
+      prisma.incomeEntry.findMany({
+        where: { userId: req.userId, date: { gte: historyStart, lt: monthStart } },
+        select: { amountPhp: true },
+      }),
+      prisma.transaction.findMany({
+        where: { userId: req.userId, date: { gte: historyStart, lt: monthStart } },
+        select: { amount: true },
+      }),
+      prisma.debtPayment.findMany({
+        where: { userId: req.userId, date: { gte: historyStart, lt: monthStart } },
+        select: { amount: true },
+      }),
       prisma.debt.findMany({
         where: { userId: req.userId, status: 'ACTIVE' },
         orderBy: { interestRate: 'desc' },
       }),
       prisma.surplusAllocation.findUnique({
         where: { userId_month: { userId: req.userId, month } },
-      }),
-      prisma.surplusAllocation.findUnique({
-        where: { userId_month: { userId: req.userId, month: prevMonth } },
       }),
     ]);
 
@@ -43,8 +53,12 @@ router.get('/:month', async (req, res) => {
     const totalDebtPaid = debtPayments.reduce((s, p) => s + Number(p.amount), 0);
     const computedSurplus = totalIncome - totalExpenses - totalDebtPaid;
 
-    // Add previous month's unallocated carryover
-    const carryover = prevAllocation ? Number(prevAllocation.carryover ?? 0) : 0;
+    // Carryover = accumulated net surplus from all previous months (dynamic, no Save Plan needed)
+    const histTotalIncome = histIncome.reduce((s, e) => s + Number(e.amountPhp), 0);
+    const histTotalExpenses = histExpenses.reduce((s, t) => s + Number(t.amount), 0);
+    const histTotalDebtPaid = histDebtPayments.reduce((s, p) => s + Number(p.amount), 0);
+    const carryover = Math.max(0, histTotalIncome - histTotalExpenses - histTotalDebtPaid);
+
     const surplus = computedSurplus + carryover;
 
     const suggestion = autoSplit(surplus, debts);
