@@ -12,9 +12,9 @@ function StatCard({ label, value, sub, color = 'text-neutral-800 dark:text-neutr
     <div className="card flex items-start gap-3">
       {icon && <div className="mt-0.5 text-neutral-300 dark:text-neutral-600">{icon}</div>}
       <div className="min-w-0">
-        <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-0.5">{label}</p>
+        <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-0.5">{label}</p>
         <p className={`text-xl font-bold truncate ${color}`}>{value}</p>
-        {sub && <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">{sub}</p>}
+        {sub && <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5">{sub}</p>}
       </div>
     </div>
   );
@@ -67,11 +67,11 @@ export default function Dashboard() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">{greeting}, {user.name?.split(' ')[0]} 👋</h1>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
+          <p className="text-sm text-neutral-400 dark:text-neutral-400">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
         </div>
         <button onClick={() => setShowSurplus(true)} className="btn-primary shrink-0">
           <Target size={15} />
-          Allocate Surplus
+          Leftover Cash
         </button>
       </div>
 
@@ -80,7 +80,7 @@ export default function Dashboard() {
         <StatCard label="Income this month" value={formatPHP(thisMonth.income)} icon={<Wallet size={18} />} />
         <StatCard label="Expenses logged" value={formatPHP(thisMonth.spent)} icon={<TrendingDown size={18} />} />
         <StatCard
-          label="Surplus"
+          label="Leftover Cash"
           value={formatPHP(thisMonth.surplus)}
           icon={<TrendingUp size={18} />}
           color={thisMonth.surplus >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}
@@ -98,21 +98,32 @@ export default function Dashboard() {
       {/* Goal progress */}
       <div className="card">
         <div className="flex items-center justify-between mb-3">
-          <div>
-            <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Debt Payoff Goal</h2>
-            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
-              Target: {formatDate(debts.goalDate)}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Debt Payoff Goal</h2>
               {debts.projectedPayoffDate && (
-                <span className={`ml-2 font-medium ${debts.onTrack ? 'text-green-600 dark:text-green-400' : 'text-amber-500 dark:text-amber-400'}`}>
-                  {debts.onTrack ? '✓ On track' : '⚠ Behind — projected ' + formatDate(debts.projectedPayoffDate)}
-                </span>
+                debts.onTrack ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400">
+                    ✓ On track
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400">
+                    ⚠ Behind schedule
+                  </span>
+                )
+              )}
+            </div>
+            <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5">
+              Target: {formatDate(debts.goalDate)}
+              {debts.projectedPayoffDate && !debts.onTrack && (
+                <span className="ml-1">· Projected {formatDate(debts.projectedPayoffDate)}</span>
               )}
             </p>
           </div>
-          <span className="text-2xl font-bold text-brand-600">{formatPercent(debts.percentPaid)}</span>
+          <span className="text-2xl font-bold text-brand-600 shrink-0">{formatPercent(debts.percentPaid)}</span>
         </div>
         <ProgressBar percent={debts.percentPaid} color={debts.onTrack ? 'bg-green-500' : 'bg-amber-400'} />
-        <div className="flex justify-between text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
+        <div className="flex justify-between text-xs text-neutral-400 dark:text-neutral-400 mt-1.5">
           <span>₱0</span>
           <span>{formatPHP(debts.totalOriginal)}</span>
         </div>
@@ -135,12 +146,12 @@ export default function Dashboard() {
                     : <CalendarClock size={14} className="text-neutral-300 dark:text-neutral-600 shrink-0" />}
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-neutral-800 dark:text-neutral-100 truncate">{d.debtName}</p>
-                    <p className="text-xs text-neutral-400 dark:text-neutral-500">{formatDate(d.paymentDate)}</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-400">{formatDate(d.paymentDate)}</p>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">{formatPHP(d.paymentAmount)}</p>
-                  <p className={`text-xs ${d.daysUntilDue <= 7 ? 'text-red-400' : d.daysUntilDue <= 14 ? 'text-amber-500' : 'text-neutral-400 dark:text-neutral-500'}`}>
+                  <p className={`text-xs ${d.daysUntilDue <= 7 ? 'text-red-400' : d.daysUntilDue <= 14 ? 'text-amber-500' : 'text-neutral-400 dark:text-neutral-400'}`}>
                     {d.daysUntilDue === 0 ? 'Today' : `${d.daysUntilDue}d away`}
                   </p>
                 </div>
@@ -172,12 +183,12 @@ export default function Dashboard() {
                     style={{ width: `${Math.min(100, goal.percentComplete)}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-xs text-neutral-400 dark:text-neutral-500">
+                <div className="flex justify-between text-xs text-neutral-400 dark:text-neutral-400">
                   <span>{formatPHP(goal.currentAmount)}</span>
                   <span>{formatPHP(goal.targetAmount)}</span>
                 </div>
                 {goal.deadline && (
-                  <p className="text-xs text-neutral-400 dark:text-neutral-500">Due {formatDate(goal.deadline)}</p>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-400">Due {formatDate(goal.deadline)}</p>
                 )}
               </div>
             ))}
@@ -210,7 +221,7 @@ export default function Dashboard() {
                         <span className="text-xs font-bold text-neutral-300 dark:text-neutral-600">#{i + 1}</span>
                         <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100 truncate">{debt.name}</span>
                       </div>
-                      <p className="text-xs text-neutral-400 dark:text-neutral-500">{debtTypeLabel(debt.type)} · {(debt.interestRate * 100).toFixed(1)}% p.a.</p>
+                      <p className="text-xs text-neutral-400 dark:text-neutral-400">{debtTypeLabel(debt.type)} · {(debt.interestRate * 100).toFixed(1)}% per year</p>
                     </div>
                     <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-100 shrink-0">{formatPHP(debt.currentBalance)}</span>
                   </div>
@@ -227,7 +238,7 @@ export default function Dashboard() {
             <div>
               <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Budget Overview</h2>
               {totalAllocated > 0 && (
-                <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">{formatPHP(thisMonth.spent)} of {formatPHP(totalAllocated)} spent</p>
+                <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5">{formatPHP(thisMonth.spent)} of {formatPHP(totalAllocated)} spent</p>
               )}
             </div>
             <Link to="/budget" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
@@ -262,7 +273,7 @@ export default function Dashboard() {
                 );
               })}
               {categories.length > 5 && (
-                <p className="text-xs text-neutral-400 dark:text-neutral-500 pt-1">+{categories.length - 5} more categories</p>
+                <p className="text-xs text-neutral-400 dark:text-neutral-400 pt-1">+{categories.length - 5} more categories</p>
               )}
             </div>
           )}
@@ -286,10 +297,10 @@ export default function Dashboard() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-neutral-100 dark:border-neutral-700">
-                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-2">Category</th>
-                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-2 hidden sm:table-cell">Description</th>
-                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-2 hidden sm:table-cell">Date</th>
-                <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-2">Amount</th>
+                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-400 px-4 py-2">Category</th>
+                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-400 px-4 py-2 hidden sm:table-cell">Description</th>
+                <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-400 px-4 py-2 hidden sm:table-cell">Date</th>
+                <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-400 px-4 py-2">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -305,7 +316,7 @@ export default function Dashboard() {
                     <p className="text-sm text-neutral-700 dark:text-neutral-300 truncate max-w-[180px]">{tx.description || tx.category?.name || 'Expense'}</p>
                   </td>
                   <td className="px-4 py-2.5 hidden sm:table-cell">
-                    <p className="text-xs text-neutral-400 dark:text-neutral-500">{formatDate(tx.date)}</p>
+                    <p className="text-xs text-neutral-400 dark:text-neutral-400">{formatDate(tx.date)}</p>
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">{formatPHP(tx.amount)}</span>

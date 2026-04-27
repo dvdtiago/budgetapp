@@ -6,6 +6,7 @@ import api from '../lib/api.js';
 import { formatPHP, formatDate } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
 import SurplusModal from '../components/SurplusModal.jsx';
+import EditTransactionModal from '../components/EditTransactionModal.jsx';
 
 function ProgressBar({ value, max }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
@@ -13,59 +14,6 @@ function ProgressBar({ value, max }) {
   return (
     <div className="progress-track">
       <div className={over ? 'progress-fill-red' : 'progress-fill'} style={{ width: `${pct}%` }} />
-    </div>
-  );
-}
-
-function EditTransactionModal({ tx, categories, onSave, onClose }) {
-  const [form, setForm] = useState({
-    categoryId: tx.categoryId || '',
-    amount: String(tx.amount),
-    description: tx.description || '',
-    date: tx.date ? new Date(tx.date).toISOString().slice(0, 10) : '',
-  });
-
-  async function submit(e) {
-    e.preventDefault();
-    await onSave(tx.id, form);
-    onClose();
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 dark:bg-black/50 px-4 pb-4 sm:pb-0">
-      <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-neutral-800 dark:text-neutral-100">Edit transaction</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700"><X size={16} /></button>
-        </div>
-        <form onSubmit={submit} className="space-y-3">
-          <div>
-            <label className="label">Category</label>
-            <select className="input" value={form.categoryId} onChange={e => setForm(f => ({ ...f, categoryId: e.target.value }))}>
-              <option value="">— No category —</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Amount (₱)</label>
-              <input className="input" type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} required />
-            </div>
-            <div>
-              <label className="label">Date</label>
-              <input className="input" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required />
-            </div>
-          </div>
-          <div>
-            <label className="label">Description</label>
-            <input className="input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-          </div>
-          <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
-            <button type="submit" className="btn-primary flex-1">Save changes</button>
-          </div>
-        </form>
-      </div>
     </div>
   );
 }
@@ -219,11 +167,11 @@ export default function Budget() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Budget</h1>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500">Expenses and debt payments in one place</p>
+          <p className="text-sm text-neutral-400 dark:text-neutral-400">Expenses and debt payments in one place</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button onClick={() => setShowSurplus(true)} className="btn-secondary">
-            <Target size={15} /> Allocate Surplus
+            <Target size={15} /> Leftover Cash
           </button>
           <button onClick={() => setShowAddTx(s => !s)} className="btn-primary">
             <Plus size={15} /> Log expense
@@ -234,20 +182,20 @@ export default function Budget() {
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card text-center">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Total budgeted</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Total budgeted</p>
           <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalBudgeted)}</p>
-          <p className="text-xs text-neutral-400 dark:text-neutral-500">expenses + min payments</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-400">expenses + min payments</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Expenses spent</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Expenses spent</p>
           <p className={`text-lg font-bold ${totalExpenses > totalAllocated ? 'text-red-500' : 'text-neutral-800 dark:text-neutral-100'}`}>{formatPHP(totalExpenses)}</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Debt payments made</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Debt payments made</p>
           <p className="text-lg font-bold text-brand-600">{formatPHP(totalDebtPaid)}</p>
         </div>
         <div className="card text-center">
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Total out</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mb-1">Total out</p>
           <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalExpenses + totalDebtPaid)}</p>
         </div>
       </div>
@@ -261,6 +209,7 @@ export default function Budget() {
               <div>
                 <label className="label">Category</label>
                 <select className="input" value={txForm.categoryId} onChange={e => setTxForm(f => ({ ...f, categoryId: e.target.value }))}>
+                  <option value="" disabled>Select a category</option>
                   <option value="">— No category —</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                 </select>
@@ -321,7 +270,7 @@ export default function Budget() {
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-neutral-800 dark:text-neutral-100">{debt.name}</span>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-neutral-400 dark:text-neutral-500">{formatPHP(paid)} / {formatPHP(min)}</span>
+                        <span className="text-xs text-neutral-400 dark:text-neutral-400">{formatPHP(paid)} / {formatPHP(min)}</span>
                         <button
                           onClick={() => setPayingDebtId(payingDebtId === debt.id ? null : debt.id)}
                           className="btn-secondary text-xs py-1"
@@ -330,8 +279,8 @@ export default function Budget() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5">
-                      Min. payment: {formatPHP(min)} · Balance: {formatPHP(debt.currentBalance)} · {(Number(debt.interestRate) * 100).toFixed(2)}% p.a.
+                    <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5">
+                      Min. payment: {formatPHP(min)} · Balance: {formatPHP(debt.currentBalance)} · {(Number(debt.interestRate) * 100).toFixed(2)}% per year
                     </p>
                   </div>
                 </div>
@@ -363,7 +312,7 @@ export default function Budget() {
             );
           })}
           {debts.length === 0 && (
-            <p className="text-sm text-neutral-400 dark:text-neutral-500">No active debts. <Link to="/debts" className="text-brand-600 hover:underline">Add one here.</Link></p>
+            <p className="text-sm text-neutral-400 dark:text-neutral-400">No active debts. <Link to="/debts" className="text-brand-600 hover:underline">Add one here.</Link></p>
           )}
         </div>
       </section>
@@ -445,7 +394,7 @@ export default function Budget() {
                     <div className="flex justify-end mt-2">
                       <span className={`text-sm font-semibold ${over ? 'text-red-500' : 'text-neutral-700 dark:text-neutral-200'}`}>
                         {formatPHP(cat.spent)}
-                        <span className="text-neutral-400 dark:text-neutral-500 font-normal"> / {formatPHP(cat.monthlyAllocation)} spent</span>
+                        <span className="text-neutral-400 dark:text-neutral-400 font-normal"> / {formatPHP(cat.monthlyAllocation)} spent</span>
                       </span>
                     </div>
                   </>
@@ -500,7 +449,7 @@ export default function Budget() {
                 <span className="text-base">{tx.category?.icon || '📦'}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-neutral-800 dark:text-neutral-100 truncate">{tx.description || tx.category?.name || 'Expense'}</p>
-                  <p className="text-xs text-neutral-400 dark:text-neutral-500">{formatDate(tx.date)} · {tx.category?.name || 'Uncategorized'}</p>
+                  <p className="text-xs text-neutral-400 dark:text-neutral-400">{formatDate(tx.date)} · {tx.category?.name || 'Uncategorized'}</p>
                 </div>
                 <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100 shrink-0">{formatPHP(tx.amount)}</span>
                 <button onClick={() => setEditingTx(tx)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">

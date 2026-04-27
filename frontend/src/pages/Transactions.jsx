@@ -1,61 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Trash2, Pencil, X, CreditCard, ShoppingBag, Plus } from 'lucide-react';
+import { Trash2, Pencil, CreditCard, ShoppingBag, Plus } from 'lucide-react';
 import api from '../lib/api.js';
 import { formatPHP, formatDate } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
-
-function EditTransactionModal({ tx, categories, onSave, onClose }) {
-  const [form, setForm] = useState({
-    categoryId: tx.categoryId || '',
-    amount: String(tx.amount),
-    description: tx.description || '',
-    date: tx.date ? new Date(tx.date).toISOString().slice(0, 10) : '',
-  });
-
-  async function submit(e) {
-    e.preventDefault();
-    await onSave(tx.id, form);
-    onClose();
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 dark:bg-black/50 px-4 pb-4 sm:pb-0">
-      <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl w-full max-w-sm p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-neutral-800 dark:text-neutral-100">Edit transaction</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700"><X size={16} /></button>
-        </div>
-        <form onSubmit={submit} className="space-y-3">
-          <div>
-            <label className="label">Category</label>
-            <select className="input" value={form.categoryId} onChange={e => setForm(f => ({ ...f, categoryId: e.target.value }))}>
-              <option value="">— No category —</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label">Amount (₱)</label>
-              <input className="input" type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} required />
-            </div>
-            <div>
-              <label className="label">Date</label>
-              <input className="input" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required />
-            </div>
-          </div>
-          <div>
-            <label className="label">Description</label>
-            <input className="input" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
-          </div>
-          <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>
-            <button type="submit" className="btn-primary flex-1">Save changes</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
+import EditTransactionModal from '../components/EditTransactionModal.jsx';
 
 export default function Transactions() {
   const { month } = useMonth();
@@ -151,7 +99,7 @@ export default function Transactions() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Transactions</h1>
-        <p className="text-sm text-neutral-400 dark:text-neutral-500">
+        <p className="text-sm text-neutral-400 dark:text-neutral-400">
           {formatPHP(totalExpenses)} expenses · {formatPHP(totalPayments)} debt payments · {formatPHP(totalExpenses + totalPayments)} total out
         </p>
         <button
@@ -184,6 +132,7 @@ export default function Transactions() {
                   <>
                     <label className="label">Category</label>
                     <select className="input" value={newEntry.categoryId} onChange={e => setNewEntry(r => ({ ...r, categoryId: e.target.value }))}>
+                      <option value="" disabled>Select a category</option>
                       <option value="">— No category —</option>
                       {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
                     </select>
@@ -192,7 +141,7 @@ export default function Transactions() {
                   <>
                     <label className="label">Debt</label>
                     <select className="input" value={newEntry.debtId} onChange={e => setNewEntry(r => ({ ...r, debtId: e.target.value }))} required>
-                      <option value="">— Select debt —</option>
+                      <option value="" disabled>Select a debt</option>
                       {debts.filter(d => d.status === 'ACTIVE').map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                   </>
@@ -279,7 +228,7 @@ export default function Transactions() {
                   ? (entry.description || entry.category?.name || 'Expense')
                   : (entry.notes || 'Debt payment')}
               </p>
-              <p className="text-xs text-neutral-400 dark:text-neutral-500 shrink-0">{formatDate(entry.date)}</p>
+              <p className="text-xs text-neutral-400 dark:text-neutral-400 shrink-0">{formatDate(entry.date)}</p>
             </div>
             {/* Row 3: actions */}
             {entry._type === 'expense' && (
@@ -301,10 +250,10 @@ export default function Transactions() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-neutral-100 dark:border-neutral-700">
-              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 w-40">Type</th>
-              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3">Description</th>
-              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 w-32">Date</th>
-              <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-500 px-4 py-3 w-32">Amount</th>
+              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-400 px-4 py-3 w-40">Type</th>
+              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-400 px-4 py-3">Description</th>
+              <th className="text-left text-xs font-medium text-neutral-400 dark:text-neutral-400 px-4 py-3 w-32">Date</th>
+              <th className="text-right text-xs font-medium text-neutral-400 dark:text-neutral-400 px-4 py-3 w-32">Amount</th>
               <th className="px-4 py-3 w-16"></th>
             </tr>
           </thead>

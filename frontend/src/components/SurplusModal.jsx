@@ -75,19 +75,29 @@ export default function SurplusModal({ month, onClose }) {
       <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-700">
           <div>
-            <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Allocate Surplus</h2>
-            {data && (
-              <div className="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5 space-y-0.5">
-                <p>Income: <span className="text-green-600 dark:text-green-400 font-medium">{formatPHP(data.totalIncome)}</span></p>
-                <p>
-                  Expenses: <span className="font-medium text-neutral-600 dark:text-neutral-300">{formatPHP(data.totalExpenses)}</span>
-                  {' · '}Debt paid: <span className="font-medium text-brand-600 dark:text-brand-400">{formatPHP(data.totalDebtPaid)}</span>
+            {data ? (
+              <>
+                <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">
+                  {data.surplus > 0
+                    ? <>Where should your extra <span className="text-green-600 dark:text-green-400">{formatPHP(data.surplus)}</span> go?</>
+                    : 'No leftover cash this month'}
+                </h2>
+                <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5 max-w-xs">
+                  {data.surplus > 0
+                    ? 'Use the magic wand to put it toward your highest-interest debt first, or split it manually between your debts and goals.'
+                    : 'Your income covered your expenses and debt payments — nothing left to distribute.'}
                 </p>
-                <p>Available surplus: <span className={`font-semibold ${data.surplus >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>{formatPHP(data.surplus)}</span></p>
-              </div>
+                <div className="text-xs text-neutral-400 dark:text-neutral-400 mt-1.5 space-y-0.5">
+                  <p>Income: <span className="text-green-600 dark:text-green-400 font-medium">{formatPHP(data.totalIncome)}</span>
+                  {' · '}Expenses: <span className="font-medium text-neutral-600 dark:text-neutral-300">{formatPHP(data.totalExpenses)}</span>
+                  {' · '}Debt paid: <span className="font-medium text-brand-600 dark:text-brand-400">{formatPHP(data.totalDebtPaid)}</span></p>
+                </div>
+              </>
+            ) : (
+              <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Leftover Cash</h2>
             )}
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
             <X size={18} />
           </button>
         </div>
@@ -97,9 +107,14 @@ export default function SurplusModal({ month, onClose }) {
         ) : (
           <>
             <div className="px-5 py-3 bg-neutral-50 dark:bg-neutral-900/50 border-b border-neutral-100 dark:border-neutral-700 flex items-center gap-3">
-              <button onClick={autoSplit} className="btn-secondary text-xs gap-1.5">
+              <button
+                onClick={autoSplit}
+                className="btn-secondary text-xs gap-1.5"
+                title="Pays off your highest-interest debt first, then works down — minimises the total interest you pay over time."
+              >
                 <Wand2 size={13} />
-                Auto-split (Avalanche)
+                Auto-split
+                <span className="text-neutral-400 dark:text-neutral-500 font-normal hidden sm:inline">· highest interest first</span>
               </button>
               <span className={`text-xs ml-auto font-medium ${Math.abs(remaining) < 0.01 ? 'text-green-600 dark:text-green-400' : 'text-amber-500 dark:text-amber-400'}`}>
                 {Math.abs(remaining) < 0.01
@@ -173,7 +188,7 @@ export default function SurplusModal({ month, onClose }) {
             <div className="px-5 py-4 border-t border-neutral-100 dark:border-neutral-700 flex gap-3">
               <button onClick={onClose} className="btn-secondary flex-1">Cancel</button>
               <button onClick={confirm} disabled={saving || saved} className="btn-primary flex-1">
-                {saved ? '✓ Saved!' : saving ? 'Saving…' : 'Confirm Allocation'}
+                {saved ? '✓ Saved!' : saving ? 'Saving…' : 'Save Plan'}
               </button>
             </div>
           </>

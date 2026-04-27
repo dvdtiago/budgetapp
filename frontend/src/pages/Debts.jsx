@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, ChevronDown, ChevronUp, Trash2, Zap, Calendar } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Trash2, Zap, Calendar, X } from 'lucide-react';
 import api from '../lib/api.js';
 import { formatPHP, formatDate, formatPercent, debtTypeLabel, debtStatusColor } from '../lib/utils.js';
 
@@ -74,29 +74,31 @@ function DebtForm({ initial, onSave, onCancel }) {
         <div>
           <label className="label">Current balance (₱)</label>
           <input className="input" type="number" min="0" step="0.01" value={form.currentBalance} onChange={e => set('currentBalance', e.target.value)} required />
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">{hints.current}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">{hints.current}</p>
         </div>
         <div>
           <label className="label">Original balance (₱)</label>
           <input className="input" type="number" min="0" step="0.01" value={form.originalBalance} onChange={e => set('originalBalance', e.target.value)} required />
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">{hints.original}</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">{hints.original}</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Interest rate (% per year)</label>
           <input className="input" type="number" min="0" step="0.01" value={form.interestRate} onChange={e => set('interestRate', e.target.value)} placeholder="e.g. 24" required />
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">The yearly % your bank charges. Check your latest statement.</p>
         </div>
         <div>
           <label className="label">{isCC ? 'Minimum payment (₱)' : 'Monthly payment (₱)'}</label>
           <input className="input" type="number" min="0" step="0.01" value={form.minPayment} onChange={e => set('minPayment', e.target.value)} required />
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">{isCC ? 'Smallest amount you must pay each month to avoid penalties.' : 'Fixed monthly repayment amount.'}</p>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Target clear date (optional)</label>
           <input className="input" type="date" value={form.clearDate} onChange={e => set('clearDate', e.target.value)} />
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1">Personal deadline to pay off this debt</p>
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1">Personal deadline to pay off this debt</p>
         </div>
         {form.status === 'PLANNED' && (
           <div>
@@ -168,7 +170,7 @@ function AmortizationTable({ debtId }) {
   return (
     <div className="mt-3 bg-neutral-50 rounded-xl p-4">
       <div className="flex items-center gap-3 mb-3">
-        <p className="text-sm font-medium text-neutral-700 flex-1">Amortization Schedule</p>
+        <p className="text-sm font-medium text-neutral-700 flex-1">Payoff Timeline</p>
         <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="input w-auto text-xs" />
         <button onClick={generate} disabled={generating} className="btn-primary text-xs">
           <Zap size={13} />
@@ -206,7 +208,7 @@ function AmortizationTable({ debtId }) {
           )}
         </div>
       ) : (
-        <p className="text-xs text-neutral-400">No schedule yet. Click "Generate" to build the amortization table from the current balance.</p>
+        <p className="text-xs text-neutral-400">No plan yet. Click "Generate" to see how your balance drops each month as you make payments.</p>
       )}
     </div>
   );
@@ -232,7 +234,7 @@ function DebtCard({ debt, onDelete, onPayment, onEdit }) {
             <span className="font-semibold text-neutral-800 dark:text-neutral-100">{debt.name}</span>
             {debt.provider && <span className="text-xs text-neutral-400">{debt.provider}</span>}
             <span className={`badge ${debtStatusColor(debt.status)}`}>{debt.status === 'PAID_OFF' ? 'Paid off' : debt.status === 'PLANNED' ? 'Planned' : debtTypeLabel(debt.type)}</span>
-            <span className="badge bg-red-50 text-red-600">{(Number(debt.interestRate) * 100).toFixed(2)}% p.a.</span>
+            <span className="badge bg-red-50 text-red-600">{(Number(debt.interestRate) * 100).toFixed(2)}% per year</span>
           </div>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-lg font-bold text-neutral-800">{formatPHP(debt.currentBalance)}</span>
@@ -241,7 +243,7 @@ function DebtCard({ debt, onDelete, onPayment, onEdit }) {
           <div className="mt-2">
             <ProgressBar percent={percent} color={debt.status === 'PAID_OFF' ? 'bg-green-500' : 'bg-brand-600'} />
           </div>
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
+          <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1.5">
             {debt.type === 'CREDIT_CARD' ? 'Min. payment' : 'Monthly payment'}: {formatPHP(debt.minPayment)}
           </p>
           {debt.status === 'PLANNED' && debt.plannedStartDate && (
@@ -304,6 +306,8 @@ export default function Debts() {
     load();
   }
 
+  const [showTip, setShowTip] = useState(() => !localStorage.getItem('debt-tip-dismissed'));
+
   const active = debts.filter(d => d.status === 'ACTIVE');
   const planned = debts.filter(d => d.status === 'PLANNED');
   const paidOff = debts.filter(d => d.status === 'PAID_OFF');
@@ -314,11 +318,29 @@ export default function Debts() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Debts</h1>
-        <p className="text-sm text-neutral-400">Sorted by interest rate — highest first (Avalanche method)</p>
+        <p className="text-sm text-neutral-400 dark:text-neutral-400">Sorted by interest rate — highest first, to save you the most money overall.</p>
         <button onClick={() => setShowForm(s => !s)} className="btn-primary mt-3">
           <Plus size={15} /> Add debt
         </button>
       </div>
+
+      {showTip && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
+          <span className="text-xl shrink-0 mt-0.5">💡</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Interest-First Strategy</p>
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
+              Your debts are ordered by interest rate (highest first). By putting any extra cash toward Debt #1, you pay the least total interest over time — this is the fastest path to being debt-free.
+            </p>
+          </div>
+          <button
+            onClick={() => { setShowTip(false); localStorage.setItem('debt-tip-dismissed', '1'); }}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 shrink-0"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {showForm && (
         <div className="card">

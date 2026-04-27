@@ -12,7 +12,7 @@ const primaryNav = [
   { to: '/dashboard',    label: 'Home',         icon: LayoutDashboard },
   { to: '/budget',       label: 'Budget',       icon: BarChart2 },
   { to: '/transactions', label: 'Transactions', icon: List },
-  { to: '/debts',        label: 'Debts',        icon: CreditCard },
+  { to: '/income',       label: 'Income',       icon: Wallet },
 ];
 
 // All nav items (desktop sidebar + More sheet)
@@ -29,7 +29,7 @@ const allNav = [
 
 // Items that go in the "More" sheet (mobile)
 const moreNav = [
-  { to: '/income',       label: 'Income',       icon: Wallet },
+  { to: '/debts',        label: 'Debts',        icon: CreditCard },
   { to: '/goals',        label: 'Goals',        icon: Target },
   { to: '/trends',       label: 'Trends',       icon: TrendingUp },
   { to: '/settings',     label: 'Settings',     icon: Settings },
@@ -244,7 +244,7 @@ export default function Layout() {
           >
             <div className="flex items-center justify-between px-5 pt-4 pb-2">
               <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">More</span>
-              <button onClick={() => setShowMore(false)} className="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <button onClick={() => setShowMore(false)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800">
                 <X size={18} />
               </button>
             </div>
