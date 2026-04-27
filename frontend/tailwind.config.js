@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Zalando Sans SemiExpanded"', 'sans-serif'],
+        display: ['"Space Grotesk"', 'sans-serif'],
         sans:    ['"DM Sans"', 'sans-serif'],
       },
       colors: {

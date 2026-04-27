@@ -57,18 +57,16 @@ export default function Income() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Income</h1>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500">All amounts shown in Philippine Peso (₱)</p>
-        </div>
-        <button onClick={() => setShowForm(s => !s)} className="btn-primary">
+      <div>
+        <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Income</h1>
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">All amounts shown in Philippine Peso (₱)</p>
+        <button onClick={() => setShowForm(s => !s)} className="btn-primary mt-3">
           <Plus size={15} /> Log income
         </button>
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="card text-center">
           <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Total income</p>
           <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalIncome)}</p>

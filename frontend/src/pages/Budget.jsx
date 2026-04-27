@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, Pencil, Check, X, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, GripVertical, Target } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import api from '../lib/api.js';
 import { formatPHP, formatDate } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
+import SurplusModal from '../components/SurplusModal.jsx';
 
 function ProgressBar({ value, max }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
@@ -81,6 +82,7 @@ export default function Budget() {
   const [editCatId, setEditCatId] = useState(null);
   const [showAddCat, setShowAddCat] = useState(false);
   const [payingDebtId, setPayingDebtId] = useState(null);
+  const [showSurplus, setShowSurplus] = useState(false);
   const [txForm, setTxForm] = useState({ categoryId: '', amount: '', description: '', date: new Date().toISOString().slice(0, 10) });
   const [catForm, setCatForm] = useState({ name: '', monthlyAllocation: '', icon: '', color: '#6366f1' });
   const [debtPayForm, setDebtPayForm] = useState({ amount: '', date: new Date().toISOString().slice(0, 10), notes: '' });
@@ -214,18 +216,23 @@ export default function Budget() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Budget</h1>
           <p className="text-sm text-neutral-400 dark:text-neutral-500">Expenses and debt payments in one place</p>
         </div>
-        <button onClick={() => setShowAddTx(s => !s)} className="btn-primary">
-          <Plus size={15} /> Log expense
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={() => setShowSurplus(true)} className="btn-secondary">
+            <Target size={15} /> Allocate Surplus
+          </button>
+          <button onClick={() => setShowAddTx(s => !s)} className="btn-primary">
+            <Plus size={15} /> Log expense
+          </button>
+        </div>
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card text-center">
           <p className="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Total budgeted</p>
           <p className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(totalBudgeted)}</p>
@@ -516,6 +523,8 @@ export default function Budget() {
           onClose={() => setEditingTx(null)}
         />
       )}
+
+      {showSurplus && <SurplusModal month={month} onClose={() => setShowSurplus(false)} />}
     </div>
   );
 }

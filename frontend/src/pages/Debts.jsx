@@ -312,12 +312,10 @@ export default function Debts() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Debts</h1>
-          <p className="text-sm text-neutral-400">Sorted by interest rate — highest first (Avalanche method)</p>
-        </div>
-        <button onClick={() => setShowForm(s => !s)} className="btn-primary">
+      <div>
+        <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">Debts</h1>
+        <p className="text-sm text-neutral-400">Sorted by interest rate — highest first (Avalanche method)</p>
+        <button onClick={() => setShowForm(s => !s)} className="btn-primary mt-3">
           <Plus size={15} /> Add debt
         </button>
       </div>

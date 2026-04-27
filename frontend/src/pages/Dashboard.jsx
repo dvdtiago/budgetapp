@@ -5,7 +5,6 @@ import { format } from 'date-fns';
 import api from '../lib/api.js';
 import { formatPHP, formatDate, formatPercent, debtTypeLabel } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
-import SurplusModal from '../components/SurplusModal.jsx';
 
 function StatCard({ label, value, sub, color = 'text-neutral-800 dark:text-neutral-100', icon }) {
   return (
@@ -35,7 +34,6 @@ export default function Dashboard() {
   const { month } = useMonth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showSurplus, setShowSurplus] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
@@ -57,19 +55,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">{greeting}, {user.name?.split(' ')[0]} 👋</h1>
-          <p className="text-sm text-neutral-400 dark:text-neutral-500">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
-        </div>
-        <button onClick={() => setShowSurplus(true)} className="btn-primary shrink-0">
-          <Target size={15} />
-          Allocate Surplus
-        </button>
+      <div>
+        <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">{greeting}, {user.name?.split(' ')[0]} 👋</h1>
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label="Income this month" value={formatPHP(thisMonth.income)} icon={<Wallet size={18} />} />
         <StatCard label="Expenses logged" value={formatPHP(thisMonth.spent)} icon={<TrendingDown size={18} />} />
         <StatCard
@@ -245,7 +237,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {showSurplus && <SurplusModal month={month} onClose={() => setShowSurplus(false)} />}
     </div>
   );
 }

@@ -30,7 +30,7 @@ const allNav = [
 // Items that go in the "More" sheet (mobile)
 const moreNav = [
   { to: '/income',       label: 'Income',       icon: Wallet },
-  { to: '/transactions', label: 'Transactions', icon: List },
+  { to: '/goals',        label: 'Goals',        icon: Target },
   { to: '/trends',       label: 'Trends',       icon: TrendingUp },
   { to: '/settings',     label: 'Settings',     icon: Settings },
 ];
