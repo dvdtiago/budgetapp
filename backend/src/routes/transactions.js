@@ -38,8 +38,8 @@ router.post('/', async (req, res) => {
     const transaction = await prisma.transaction.create({
       data: {
         userId: req.userId,
-        categoryId: categoryId || null,
-        amount,
+        categoryId: categoryId ? Number(categoryId) : null,
+        amount: Number(amount),
         description,
         date: new Date(date),
       },
@@ -61,8 +61,8 @@ router.put('/:id', async (req, res) => {
     const updated = await prisma.transaction.update({
       where: { id: Number(req.params.id) },
       data: {
-        categoryId: req.body.categoryId !== undefined ? (req.body.categoryId || null) : tx.categoryId,
-        amount: req.body.amount ?? tx.amount,
+        categoryId: req.body.categoryId !== undefined ? (req.body.categoryId ? Number(req.body.categoryId) : null) : tx.categoryId,
+        amount: req.body.amount !== undefined ? Number(req.body.amount) : tx.amount,
         description: req.body.description ?? tx.description,
         date: req.body.date ? new Date(req.body.date) : tx.date,
       },
