@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Plus, ChevronDown, ChevronUp, Trash2, Zap, Calendar, X, Pencil, RefreshCw } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Trash2, Zap, Calendar, X, Pencil, RefreshCw, Check } from 'lucide-react';
 import api from '../lib/api.js';
 import { formatPHP, formatDate, formatPercent, debtTypeLabel, debtStatusColor } from '../lib/utils.js';
+import { useSurplus } from '../lib/SurplusContext.jsx';
 
 const DEBT_TYPES = ['CREDIT_CARD', 'LOAN', 'MORTGAGE'];
 
@@ -122,8 +123,8 @@ function DebtForm({ initial, onSave, onCancel }) {
   );
 }
 
-function PaymentForm({ debt, onSave, onCancel }) {
-  const [form, setForm] = useState({ amount: '', date: new Date().toISOString().slice(0, 10), notes: '' });
+function PaymentForm({ debt, onSave, onCancel, defaultAmount }) {
+  const [form, setForm] = useState({ amount: defaultAmount ? String(defaultAmount) : '', date: new Date().toISOString().slice(0, 10), notes: '' });
 
   async function submit(e) {
     e.preventDefault();
@@ -305,6 +306,10 @@ function DebtCard({ debt, onDelete, onPayment, onBalanceUpdate, onEdit }) {
   const [expanded, setExpanded] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [showBalanceUpdate, setShowBalanceUpdate] = useState(false);
+  const { plan } = useSurplus();
+  const planItem = plan.find(a => a.debtId === debt.id);
+  const plannedAmount = planItem ? Number(planItem.amount) : null;
+
   const percent = Number(debt.originalBalance) > 0
     ? ((Number(debt.originalBalance) - Number(debt.currentBalance)) / Number(debt.originalBalance)) * 100
     : 0;
@@ -330,6 +335,11 @@ function DebtCard({ debt, onDelete, onPayment, onBalanceUpdate, onEdit }) {
             {debt.provider && <span className="text-xs text-neutral-400 dark:text-neutral-400">{debt.provider}</span>}
             <span className={`badge ${debtStatusColor(debt.status)}`}>{debt.status === 'PAID_OFF' ? 'Paid off' : debt.status === 'PLANNED' ? 'Planned' : debtTypeLabel(debt.type)}</span>
             <span className="badge bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">{(Number(debt.interestRate) * 100).toFixed(2)}% per year</span>
+            {plannedAmount && (
+              <span className="badge bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400">
+                <Check size={10} /> {formatPHP(plannedAmount)} planned
+              </span>
+            )}
           </div>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(debt.currentBalance)}</span>
@@ -377,7 +387,7 @@ function DebtCard({ debt, onDelete, onPayment, onBalanceUpdate, onEdit }) {
         </div>
       </div>
 
-      {showPayment && <PaymentForm debt={debt} onSave={handlePayment} onCancel={() => setShowPayment(false)} />}
+      {showPayment && <PaymentForm debt={debt} onSave={handlePayment} onCancel={() => setShowPayment(false)} defaultAmount={plannedAmount ?? Number(debt.minPayment)} />}
       {showBalanceUpdate && <BalanceUpdateForm debt={debt} onSave={handleBalanceUpdate} onCancel={() => setShowBalanceUpdate(false)} />}
       {expanded && (
         <>

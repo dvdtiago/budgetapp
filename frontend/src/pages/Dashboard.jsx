@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import api from '../lib/api.js';
 import { formatPHP, formatPHPWhole, formatDate, formatPercent, debtTypeLabel } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
+import { useSurplus } from '../lib/SurplusContext.jsx';
 import SurplusModal from '../components/SurplusModal.jsx';
 
 function StatCard({ label, amount, sub, color = 'text-neutral-800 dark:text-neutral-100', icon }) {
@@ -33,6 +34,7 @@ function ProgressBar({ percent, color = 'bg-brand-600' }) {
 
 export default function Dashboard() {
   const { month } = useMonth();
+  const { plan, hasPlan } = useSurplus();
   const [data, setData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -281,6 +283,34 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* ── Surplus Plan widget ── */}
+      {hasPlan && plan.length > 0 && (
+        <div className="card !p-0 overflow-hidden">
+          <div className="px-4 py-3 flex items-center justify-between border-b border-neutral-100 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40">
+            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Surplus Plan</span>
+            <Link to="/budget" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
+              Go to Budget <ChevronRight size={12} />
+            </Link>
+          </div>
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {formatPHP(plan.reduce((s, a) => s + Number(a.amount), 0))} planned across {plan.length} debt{plan.length !== 1 ? 's' : ''}
+              </p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                {formatPHP(thisMonth.debtPaid)} paid so far
+              </p>
+            </div>
+            <div className="h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-700 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-brand-500 transition-all duration-500"
+                style={{ width: `${Math.min(100, plan.reduce((s, a) => s + Number(a.amount), 0) > 0 ? (thisMonth.debtPaid / plan.reduce((s, a) => s + Number(a.amount), 0)) * 100 : 0)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Transactions — full width */}
       <div className="card p-0 overflow-hidden">

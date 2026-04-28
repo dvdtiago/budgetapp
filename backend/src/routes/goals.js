@@ -42,12 +42,14 @@ router.get('/contributions', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, type, targetAmount, currentAmount, deadline, notes } = req.body;
+    const { monthlyTarget } = req.body;
     const goal = await prisma.goal.create({
       data: {
         userId: req.userId,
         name,
         type,
         targetAmount: targetAmount != null && targetAmount !== '' ? Number(targetAmount) : null,
+        monthlyTarget: monthlyTarget != null && monthlyTarget !== '' ? Number(monthlyTarget) : null,
         currentAmount: Number(currentAmount) || 0,
         deadline: deadline ? new Date(deadline) : null,
         notes,
@@ -73,6 +75,9 @@ router.put('/:id', async (req, res) => {
         targetAmount: req.body.targetAmount !== undefined
           ? (req.body.targetAmount != null && req.body.targetAmount !== '' ? Number(req.body.targetAmount) : null)
           : goal.targetAmount,
+        monthlyTarget: req.body.monthlyTarget !== undefined
+          ? (req.body.monthlyTarget != null && req.body.monthlyTarget !== '' ? Number(req.body.monthlyTarget) : null)
+          : goal.monthlyTarget,
         currentAmount: req.body.currentAmount !== undefined ? Number(req.body.currentAmount) : goal.currentAmount,
         deadline: req.body.deadline !== undefined
           ? (req.body.deadline ? new Date(req.body.deadline) : null)

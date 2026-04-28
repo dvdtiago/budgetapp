@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useMonth } from '../lib/MonthContext.jsx';
+import { SurplusProvider } from '../lib/SurplusContext.jsx';
 
 // Primary bottom nav items (mobile)
 const primaryNav = [
@@ -284,7 +285,9 @@ export default function Layout() {
       {/* ── MAIN CONTENT ── */}
       <main className="flex-1 md:ml-56 pt-14 pb-20 md:pb-6 min-h-screen">
         <div className="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-6">
-          <Outlet />
+          <SurplusProvider>
+            <Outlet />
+          </SurplusProvider>
         </div>
       </main>
     </div>

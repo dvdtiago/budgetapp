@@ -22,7 +22,7 @@ const PROGRESS_COLORS = {
 };
 
 function emptyForm() {
-  return { name: '', type: 'SAVINGS', targetAmount: '', currentAmount: '', deadline: '', notes: '' };
+  return { name: '', type: 'SAVINGS', targetAmount: '', monthlyTarget: '', currentAmount: '', deadline: '', notes: '' };
 }
 
 function GoalForm({ initial, onSave, onCancel }) {
@@ -38,6 +38,7 @@ function GoalForm({ initial, onSave, onCancel }) {
       await onSave({
         ...form,
         targetAmount: form.targetAmount !== '' ? Number(form.targetAmount) : null,
+        monthlyTarget: form.monthlyTarget !== '' ? Number(form.monthlyTarget) : null,
         currentAmount: Number(form.currentAmount) || 0,
         deadline: form.deadline || null,
       });
@@ -62,6 +63,11 @@ function GoalForm({ initial, onSave, onCancel }) {
         <div>
           <label className="label">Target Amount (₱) <span className="text-neutral-400 font-normal normal-case">(optional)</span></label>
           <input className="input" type="number" min="0" step="0.01" value={form.targetAmount} onChange={e => set('targetAmount', e.target.value)} placeholder="Leave blank for open-ended" />
+        </div>
+        <div>
+          <label className="label">Monthly target (₱) <span className="text-neutral-400 font-normal normal-case">(optional)</span></label>
+          <input className="input" type="number" min="0" step="0.01" value={form.monthlyTarget} onChange={e => set('monthlyTarget', e.target.value)} placeholder="e.g. 5,000/mo" />
+          <p className="text-xs text-neutral-400 mt-1">Shows a progress bar in the Budget page.</p>
         </div>
         <div>
           <label className="label">Opening Balance (₱)</label>
@@ -248,6 +254,7 @@ export default function Goals() {
                       name: goal.name,
                       type: goal.type,
                       targetAmount: goal.targetAmount != null ? String(goal.targetAmount) : '',
+                      monthlyTarget: goal.monthlyTarget != null ? String(goal.monthlyTarget) : '',
                       currentAmount: String(goal.currentAmount),
                       deadline: goal.deadline ? goal.deadline.slice(0, 10) : '',
                       notes: goal.notes ?? '',

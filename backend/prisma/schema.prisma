@@ -221,11 +221,12 @@ model Goal {
   userId        Int       @map("user_id")
   name          String
   type          GoalType
-  targetAmount  Decimal?  @map("target_amount") @db.Decimal(14, 2)
-  currentAmount Decimal   @default(0) @map("current_amount") @db.Decimal(14, 2)
-  deadline      DateTime?
-  notes         String?
-  createdAt     DateTime  @default(now()) @map("created_at")
+  targetAmount   Decimal?  @map("target_amount") @db.Decimal(14, 2)
+  monthlyTarget  Decimal?  @map("monthly_target") @db.Decimal(14, 2)
+  currentAmount  Decimal   @default(0) @map("current_amount") @db.Decimal(14, 2)
+  deadline       DateTime?
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
 
   user          User               @relation(fields: [userId], references: [id])
   contributions GoalContribution[]
