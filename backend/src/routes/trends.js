@@ -97,7 +97,7 @@ router.get('/', async (req, res) => {
 
     const activeDebts = await prisma.debt.findMany({
       where: { userId: req.userId, status: { not: 'PAID_OFF' } },
-      select: { id: true, name: true, originalBalance: true, currentBalance: true, type: true },
+      select: { id: true, name: true, provider: true, originalBalance: true, currentBalance: true, type: true, createdAt: true },
     });
 
     const allPayments = await prisma.debtPayment.findMany({
@@ -117,33 +117,55 @@ router.get('/', async (req, res) => {
       orderBy: { paymentDate: 'asc' },
     });
 
-    const debtBalances = activeDebts.map(debt => {
-      const debtPayments = allPayments.filter(p => p.debtId === debt.id);
-      const debtAmort = allAmort.filter(e => e.debtId === debt.id);
+    // Group debts by provider (fall back to debt name if no provider set)
+    const providerMap = {};
+    for (const debt of activeDebts) {
+      const key = debt.provider?.trim() || debt.name;
+      if (!providerMap[key]) providerMap[key] = [];
+      providerMap[key].push(debt);
+    }
+
+    const debtBalances = Object.entries(providerMap).map(([provider, debts]) => {
+      const debtIds = new Set(debts.map(d => d.id));
+      const groupPayments = allPayments.filter(p => debtIds.has(p.debtId));
+      const groupAmort = allAmort.filter(e => debtIds.has(e.debtId));
 
       const historicalData = monthKeys.map(({ year, month, key }) => {
         const monthEnd = new Date(year, month, 1);
-        const cumPaid = debtPayments
-          .filter(p => new Date(p.date) < monthEnd)
-          .reduce((s, p) => s + Number(p.amount), 0);
-        return { month: key, actual: Math.max(0, Number(debt.originalBalance) - cumPaid), projected: null };
+        let total = 0;
+        let hasAny = false;
+
+        for (const debt of debts) {
+          // Only show balance from the month the debt was first created
+          if (new Date(debt.createdAt) >= monthEnd) continue;
+          hasAny = true;
+          const cumPaid = groupPayments
+            .filter(p => p.debtId === debt.id && new Date(p.date) < monthEnd)
+            .reduce((s, p) => s + Number(p.amount), 0);
+          total += Math.max(0, Number(debt.originalBalance) - cumPaid);
+        }
+
+        return { month: key, actual: hasAny ? total : null, projected: null };
       });
 
       const projectedData = futureMonthKeys.map(({ year, month, key }) => {
         const monthStart = new Date(year, month - 1, 1);
         const monthEnd = new Date(year, month, 1);
-        const entry = debtAmort.find(e => {
-          const d = new Date(e.paymentDate);
-          return d >= monthStart && d < monthEnd;
-        });
-        return { month: key, actual: null, projected: entry ? Number(entry.remainingBalance) : null };
+        let total = null;
+
+        for (const debt of debts) {
+          const entry = groupAmort.find(e =>
+            e.debtId === debt.id &&
+            new Date(e.paymentDate) >= monthStart &&
+            new Date(e.paymentDate) < monthEnd
+          );
+          if (entry) total = (total ?? 0) + Number(entry.remainingBalance);
+        }
+
+        return { month: key, actual: null, projected: total };
       });
 
-      return {
-        debtId: debt.id,
-        name: debt.name,
-        data: [...historicalData, ...projectedData],
-      };
+      return { provider, data: [...historicalData, ...projectedData] };
     });
 
     res.json({ incomeVsExpenses, debtHistory, categoryTrend, debtBalances });

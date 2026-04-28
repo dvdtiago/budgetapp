@@ -64,17 +64,18 @@ export default function Trends() {
 
   const CAT_COLORS = ['#4f46e5', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6b7280'];
 
-  // Build pivoted data for per-debt balance chart
+  // Build pivoted data for per-provider balance chart
   const debtBalanceData = (() => {
     if (!debtBalances?.length) return [];
     const allMonths = [...new Set(debtBalances.flatMap(d => d.data.map(p => p.month)))].sort();
     return allMonths.map(month => {
       const row = { month: formatMonthLabel(month) };
-      debtBalances.forEach(debt => {
-        const point = debt.data.find(p => p.month === month);
+      debtBalances.forEach(group => {
+        const key = group.provider.replace(/\W+/g, '_');
+        const point = group.data.find(p => p.month === month);
         if (point) {
-          if (point.actual !== null) row[`${debt.debtId}_actual`] = point.actual;
-          if (point.projected !== null) row[`${debt.debtId}_projected`] = point.projected;
+          if (point.actual !== null) row[`${key}_actual`] = point.actual;
+          if (point.projected !== null) row[`${key}_projected`] = point.projected;
         }
       });
       return row;
@@ -144,36 +145,39 @@ export default function Trends() {
               <Legend
                 formatter={(value) => {
                   const isProjected = value.endsWith('_projected');
-                  const debtId = Number(value.replace('_actual', '').replace('_projected', ''));
-                  const debt = debtBalances.find(d => d.debtId === debtId);
-                  return `${debt?.name ?? value}${isProjected ? ' (projected)' : ''}`;
+                  const providerKey = value.replace(/_actual$/, '').replace(/_projected$/, '');
+                  const group = debtBalances.find(d => d.provider.replace(/\W+/g, '_') === providerKey);
+                  return `${group?.provider ?? value}${isProjected ? ' (proj.)' : ''}`;
                 }}
               />
-              {debtBalances.map((debt, i) => (
-                <>
-                  <Line
-                    key={`${debt.debtId}_actual`}
-                    type="monotone"
-                    dataKey={`${debt.debtId}_actual`}
-                    name={`${debt.debtId}_actual`}
-                    stroke={DEBT_COLORS[i % DEBT_COLORS.length]}
-                    strokeWidth={2}
-                    dot={false}
-                    connectNulls
-                  />
-                  <Line
-                    key={`${debt.debtId}_projected`}
-                    type="monotone"
-                    dataKey={`${debt.debtId}_projected`}
-                    name={`${debt.debtId}_projected`}
-                    stroke={DEBT_COLORS[i % DEBT_COLORS.length]}
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    dot={false}
-                    connectNulls
-                  />
-                </>
-              ))}
+              {debtBalances.map((group, i) => {
+                const key = group.provider.replace(/\W+/g, '_');
+                return (
+                  <>
+                    <Line
+                      key={`${key}_actual`}
+                      type="monotone"
+                      dataKey={`${key}_actual`}
+                      name={`${key}_actual`}
+                      stroke={DEBT_COLORS[i % DEBT_COLORS.length]}
+                      strokeWidth={2}
+                      dot={false}
+                      connectNulls={false}
+                    />
+                    <Line
+                      key={`${key}_projected`}
+                      type="monotone"
+                      dataKey={`${key}_projected`}
+                      name={`${key}_projected`}
+                      stroke={DEBT_COLORS[i % DEBT_COLORS.length]}
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                      connectNulls={false}
+                    />
+                  </>
+                );
+              })}
             </LineChart>
           </ResponsiveContainer>
         </div>
