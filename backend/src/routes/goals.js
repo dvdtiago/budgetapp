@@ -41,7 +41,7 @@ router.get('/contributions', async (req, res) => {
 // ── CREATE GOAL ───────────────────────────────────────────────────────────────
 router.post('/', async (req, res) => {
   try {
-    const { name, type, targetAmount, currentAmount, deadline, notes } = req.body;
+    const { name, type, targetAmount, currentAmount, deadline, notes, color } = req.body;
     const { monthlyTarget } = req.body;
     const goal = await prisma.goal.create({
       data: {
@@ -53,6 +53,7 @@ router.post('/', async (req, res) => {
         currentAmount: Number(currentAmount) || 0,
         deadline: deadline ? new Date(deadline) : null,
         notes,
+        color: color || null,
       },
     });
     res.json(goal);
@@ -83,6 +84,7 @@ router.put('/:id', async (req, res) => {
           ? (req.body.deadline ? new Date(req.body.deadline) : null)
           : goal.deadline,
         notes: req.body.notes ?? goal.notes,
+        color: req.body.color !== undefined ? (req.body.color || null) : goal.color,
       },
     });
     res.json(updated);

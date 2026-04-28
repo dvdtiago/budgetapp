@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Target, Plus, Pencil, Trash2, X, Check, PiggyBank } from 'lucide-react';
+import ColorPicker from '../components/ColorPicker.jsx';
 import api from '../lib/api.js';
 import { formatPHP, formatDate, formatPercent } from '../lib/utils.js';
 
@@ -22,7 +23,7 @@ const PROGRESS_COLORS = {
 };
 
 function emptyForm() {
-  return { name: '', type: 'SAVINGS', targetAmount: '', monthlyTarget: '', currentAmount: '', deadline: '', notes: '' };
+  return { name: '', type: 'SAVINGS', targetAmount: '', monthlyTarget: '', currentAmount: '', deadline: '', notes: '', color: '' };
 }
 
 function GoalForm({ initial, onSave, onCancel }) {
@@ -81,6 +82,10 @@ function GoalForm({ initial, onSave, onCancel }) {
         <div className="sm:col-span-2">
           <label className="label">Notes (optional)</label>
           <input className="input" value={form.notes} onChange={e => set('notes', e.target.value)} placeholder="Any notes..." />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="label">Color (optional)</label>
+          <ColorPicker value={form.color} onChange={color => set('color', color)} />
         </div>
       </div>
       <div className="flex gap-2 justify-end">
@@ -145,12 +150,12 @@ function ContributionForm({ goal, onSave, onCancel }) {
   );
 }
 
-function ProgressBar({ percent, type }) {
+function ProgressBar({ percent, type, hexColor }) {
   return (
     <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2">
       <div
-        className={`h-2 rounded-full transition-all ${PROGRESS_COLORS[type] ?? 'bg-brand-500'}`}
-        style={{ width: `${Math.min(100, percent)}%` }}
+        className={`h-2 rounded-full transition-all ${hexColor ? '' : (PROGRESS_COLORS[type] ?? 'bg-brand-500')}`}
+        style={{ width: `${Math.min(100, percent)}%`, ...(hexColor ? { backgroundColor: hexColor } : {}) }}
       />
     </div>
   );
@@ -258,6 +263,7 @@ export default function Goals() {
                       currentAmount: String(goal.currentAmount),
                       deadline: goal.deadline ? goal.deadline.slice(0, 10) : '',
                       notes: goal.notes ?? '',
+                      color: goal.color ?? '',
                     }}
                     onSave={handleEdit}
                     onCancel={() => setEditing(null)}
@@ -300,7 +306,7 @@ export default function Goals() {
                     <span>{formatPHP(goal.currentAmount)} saved</span>
                     {hasTarget && <span>{formatPercent(percent)} of {formatPHP(goal.targetAmount)}</span>}
                   </div>
-                  {hasTarget && <ProgressBar percent={percent} type={goal.type} />}
+                  {hasTarget && <ProgressBar percent={percent} type={goal.type} hexColor={goal.color} />}
                 </div>
 
                 {/* Deadline + contribute */}

@@ -40,7 +40,7 @@ router.post('/register', async (req, res) => {
     });
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error.' });
@@ -57,7 +57,7 @@ router.post('/login', async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'Invalid email or password.' });
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, isAdmin: user.isAdmin } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error.' });
@@ -68,7 +68,7 @@ router.get('/me', authenticate, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, isAdmin: true },
     });
     res.json(user);
   } catch (err) {

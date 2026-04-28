@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Plus, ChevronDown, ChevronUp, Trash2, Zap, Calendar, X, Pencil, RefreshCw, Check } from 'lucide-react';
+import ColorPicker from '../components/ColorPicker.jsx';
 import api from '../lib/api.js';
 import { formatPHP, formatDate, formatPercent, debtTypeLabel, debtStatusColor } from '../lib/utils.js';
 import { useSurplus } from '../lib/SurplusContext.jsx';
 
 const DEBT_TYPES = ['CREDIT_CARD', 'LOAN', 'MORTGAGE'];
 
-function ProgressBar({ percent, color = 'bg-brand-600' }) {
+function ProgressBar({ percent, color = 'bg-brand-600', hexColor }) {
   return (
     <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-1.5">
-      <div className={`${color} h-1.5 rounded-full`} style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
+      <div
+        className={`h-1.5 rounded-full ${hexColor ? '' : color}`}
+        style={{ width: `${Math.min(100, Math.max(0, percent))}%`, ...(hexColor ? { backgroundColor: hexColor } : {}) }}
+      />
     </div>
   );
 }
@@ -24,7 +28,7 @@ function DebtForm({ initial, onSave, onCancel }) {
   const [form, setForm] = useState(initial || {
     name: '', provider: '', type: 'CREDIT_CARD', status: 'ACTIVE',
     currentBalance: '', originalBalance: '', interestRate: '', minPayment: '',
-    plannedStartDate: '', clearDate: '',
+    plannedStartDate: '', clearDate: '', color: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -114,6 +118,10 @@ function DebtForm({ initial, onSave, onCancel }) {
             <input className="input" type="date" value={form.plannedStartDate} onChange={e => set('plannedStartDate', e.target.value)} />
           </div>
         )}
+      </div>
+      <div>
+        <label className="label">Color (optional)</label>
+        <ColorPicker value={form.color} onChange={color => set('color', color)} />
       </div>
       <div className="flex gap-2 pt-1">
         <button type="button" onClick={onCancel} className="btn-secondary flex-1">Cancel</button>
@@ -340,13 +348,22 @@ function DebtCard({ debt, onDelete, onPayment, onBalanceUpdate, onEdit }) {
                 <Check size={10} /> {formatPHP(plannedAmount)} planned
               </span>
             )}
+            {debt.paidThisMonth && debt.status !== 'PAID_OFF' && (
+              <span className="badge bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400">
+                <Check size={10} /> Paid this month
+              </span>
+            )}
           </div>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-lg font-bold text-neutral-800 dark:text-neutral-100">{formatPHP(debt.currentBalance)}</span>
             <span className="text-xs text-neutral-400 dark:text-neutral-400">of {formatPHP(debt.originalBalance)} · {formatPercent(percent)} paid</span>
           </div>
           <div className="mt-2">
-            <ProgressBar percent={percent} color={debt.status === 'PAID_OFF' ? 'bg-green-500' : 'bg-brand-600'} />
+            <ProgressBar
+              percent={percent}
+              color={debt.status === 'PAID_OFF' ? 'bg-green-500' : 'bg-brand-600'}
+              hexColor={debt.status !== 'PAID_OFF' && debt.color ? debt.color : undefined}
+            />
           </div>
           <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-1.5">
             {debt.type === 'CREDIT_CARD' ? 'Min. payment' : 'Monthly payment'}: {formatPHP(debt.minPayment)}
@@ -370,9 +387,9 @@ function DebtCard({ debt, onDelete, onPayment, onBalanceUpdate, onEdit }) {
             <button
               onClick={() => { setShowBalanceUpdate(s => !s); setShowPayment(false); }}
               className="btn-secondary text-xs"
-              title="Sync balance from your statement"
+              title="Update balance from your statement"
             >
-              <RefreshCw size={12} /> Sync
+              <RefreshCw size={12} /> Update Bal.
             </button>
           )}
           <button onClick={() => onEdit(debt)} className="p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-700">
@@ -503,6 +520,7 @@ export default function Debts() {
               minPayment: String(editingDebt.minPayment),
               plannedStartDate: editingDebt.plannedStartDate ? new Date(editingDebt.plannedStartDate).toISOString().slice(0, 10) : '',
               clearDate: editingDebt.clearDate ? new Date(editingDebt.clearDate).toISOString().slice(0, 10) : '',
+              color: editingDebt.color || '',
             }}
             onSave={updateDebt}
             onCancel={() => setEditingDebt(null)}

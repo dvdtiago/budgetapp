@@ -88,6 +88,8 @@ export default function Dashboard() {
           color={thisMonth.surplus >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}
           sub={thisMonth.carryover > 0
             ? `incl. ${formatPHPWhole(thisMonth.carryover)} rolled over`
+            : thisMonth.totalAllocated > thisMonth.spent
+            ? `${formatPHPWhole(thisMonth.totalAllocated)} budgeted for expenses`
             : `${formatPHPWhole(thisMonth.debtPaid ?? 0)} to debts`}
         />
         <StatCard
@@ -221,9 +223,12 @@ export default function Dashboard() {
                 <div key={debt.id}>
                   <div className="flex items-start justify-between gap-2 mb-1.5">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-xs font-bold text-neutral-300 dark:text-neutral-600">#{i + 1}</span>
                         <span className="text-sm font-medium text-neutral-800 dark:text-neutral-100 truncate">{debt.name}</span>
+                        {debt.paidThisMonth && (
+                          <span className="badge bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-[10px] px-1.5 py-0.5">✓ Paid this month</span>
+                        )}
                       </div>
                       <p className="text-xs text-neutral-400 dark:text-neutral-400">{debtTypeLabel(debt.type)} · {(debt.interestRate * 100).toFixed(1)}% per year</p>
                     </div>

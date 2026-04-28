@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, Plus, Trash2, CreditCard, Wallet, Building2, Smartphone } from 'lucide-react';
+import { Check, Plus, Trash2, CreditCard, Wallet, Building2, Smartphone, Download } from 'lucide-react';
 import api from '../lib/api.js';
 
 const PM_TYPE_OPTIONS = [
@@ -30,6 +30,7 @@ export default function Settings() {
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [pwError, setPwError] = useState('');
   const [pwSaved, setPwSaved] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Payment methods
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -95,6 +96,21 @@ export default function Settings() {
       setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function exportData() {
+    setExporting(true);
+    try {
+      const r = await api.get('/export', { responseType: 'blob' });
+      const url = URL.createObjectURL(r.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `budgetarian-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -284,6 +300,21 @@ export default function Settings() {
             })}
           </div>
         )}
+      </div>
+
+      {/* Export data */}
+      <div className="card space-y-3">
+        <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Export Data</h2>
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">Download all your data as a JSON file — transactions, debts, income, goals, and more.</p>
+        <button
+          type="button"
+          onClick={exportData}
+          disabled={exporting}
+          className="btn-secondary gap-2"
+        >
+          <Download size={14} />
+          {exporting ? 'Exporting…' : 'Export my data'}
+        </button>
       </div>
 
       {/* Change password */}

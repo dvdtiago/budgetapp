@@ -92,7 +92,11 @@ export default function SurplusModal({ month, onClose }) {
                 </p>
                 <div className="text-xs text-neutral-400 dark:text-neutral-400 mt-1.5 space-y-0.5">
                   <p>Income: <span className="text-green-600 dark:text-green-400 font-medium">{formatPHP(data.totalIncome)}</span>
-                  {' · '}Expenses: <span className="font-medium text-neutral-600 dark:text-neutral-300">{formatPHP(data.totalExpenses)}</span>
+                  {' · '}Expenses: <span className="font-medium text-neutral-600 dark:text-neutral-300">
+                    {data.totalAllocated > data.totalExpenses
+                      ? <>{formatPHP(data.totalAllocated)} <span className="text-neutral-400 dark:text-neutral-500 font-normal">(budgeted; {formatPHP(data.totalExpenses)} logged)</span></>
+                      : formatPHP(data.totalExpenses)}
+                  </span>
                   {' · '}Debt paid: <span className="font-medium text-brand-600 dark:text-brand-400">{formatPHP(data.totalDebtPaid)}</span></p>
                   {data.carryover > 0 && (
                     <p className="text-green-600 dark:text-green-400 font-medium">

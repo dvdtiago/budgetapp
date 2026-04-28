@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import api from '../lib/api.js';
 import { formatPHP, formatDate } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
+import ColorPicker from '../components/ColorPicker.jsx';
 import { useSurplus } from '../lib/SurplusContext.jsx';
 import SurplusModal from '../components/SurplusModal.jsx';
 import EditTransactionModal from '../components/EditTransactionModal.jsx';
@@ -490,17 +491,14 @@ export default function Budget() {
                     onChange={e => setCatForm(f => ({ ...f, monthlyAllocation: e.target.value }))} required />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="label">Icon</label>
-                  <input className="input" value={catForm.icon}
-                    onChange={e => setCatForm(f => ({ ...f, icon: e.target.value }))} placeholder="🛒" maxLength={2} />
-                </div>
-                <div>
-                  <label className="label">Color</label>
-                  <input className="input" type="color" value={catForm.color}
-                    onChange={e => setCatForm(f => ({ ...f, color: e.target.value }))} />
-                </div>
+              <div>
+                <label className="label">Icon</label>
+                <input className="input w-24" value={catForm.icon}
+                  onChange={e => setCatForm(f => ({ ...f, icon: e.target.value }))} placeholder="🛒" maxLength={2} />
+              </div>
+              <div>
+                <label className="label">Color</label>
+                <ColorPicker value={catForm.color} onChange={color => setCatForm(f => ({ ...f, color }))} />
               </div>
               <div className="flex gap-2">
                 <button type="button" onClick={() => setShowAddCat(false)} className="btn-secondary flex-1 text-xs">Cancel</button>
@@ -549,17 +547,14 @@ export default function Budget() {
                           onChange={e => setCatForm(f => ({ ...f, monthlyAllocation: e.target.value }))} required />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="label">Icon</label>
-                        <input className="input" value={catForm.icon}
-                          onChange={e => setCatForm(f => ({ ...f, icon: e.target.value }))} placeholder="🛒" maxLength={2} />
-                      </div>
-                      <div>
-                        <label className="label">Color</label>
-                        <input className="input" type="color" value={catForm.color}
-                          onChange={e => setCatForm(f => ({ ...f, color: e.target.value }))} />
-                      </div>
+                    <div>
+                      <label className="label">Icon</label>
+                      <input className="input w-24" value={catForm.icon}
+                        onChange={e => setCatForm(f => ({ ...f, icon: e.target.value }))} placeholder="🛒" maxLength={2} />
+                    </div>
+                    <div>
+                      <label className="label">Color</label>
+                      <ColorPicker value={catForm.color} onChange={color => setCatForm(f => ({ ...f, color }))} />
                     </div>
                     <div className="flex gap-2">
                       <button type="button" onClick={() => setEditCatId(null)} className="btn-secondary flex-1 text-xs">Cancel</button>

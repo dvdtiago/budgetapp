@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, CreditCard, TrendingUp, Wallet, BarChart2,
   Settings, LogOut, Sun, Moon, List, ChevronLeft, ChevronRight,
-  Target, MoreHorizontal, X,
+  Target, MoreHorizontal, X, ShieldCheck,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useMonth } from '../lib/MonthContext.jsx';
@@ -111,6 +111,7 @@ export default function Layout() {
   const [dark, setDark] = useDarkMode();
   const [showMore, setShowMore] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAdmin = Boolean(user.isAdmin);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -154,8 +155,16 @@ export default function Layout() {
               {label}
             </NavLink>
           ))}
-
-          </nav>
+          {isAdmin && (
+            <>
+              <div className="my-2 border-t border-neutral-100 dark:border-neutral-800" />
+              <NavLink to="/admin" className={navLinkClass}>
+                <ShieldCheck size={17} />
+                Admin
+              </NavLink>
+            </>
+          )}
+        </nav>
 
         {/* Dark mode + Sign out */}
         <div className="px-3 py-4 border-t border-neutral-200 dark:border-neutral-800 space-y-0.5">
@@ -259,6 +268,12 @@ export default function Layout() {
                   {label}
                 </NavLink>
               ))}
+              {isAdmin && (
+                <NavLink to="/admin" onClick={() => setShowMore(false)} className={navLinkClass}>
+                  <ShieldCheck size={17} />
+                  Admin
+                </NavLink>
+              )}
 
               <div className="my-2 border-t border-neutral-100 dark:border-neutral-800" />
 

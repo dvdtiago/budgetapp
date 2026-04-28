@@ -17,7 +17,7 @@ router.get('/:month', async (req, res) => {
 
     const [incomeEntries, transactions, debtPayments,
            histIncome, histExpenses, histDebtPayments,
-           debts, existing] = await Promise.all([
+           debts, existing, budgetAgg] = await Promise.all([
       prisma.incomeEntry.findMany({
         where: { userId: req.userId, date: { gte: monthStart, lt: monthEnd } },
       }),
@@ -46,12 +46,18 @@ router.get('/:month', async (req, res) => {
       prisma.surplusAllocation.findUnique({
         where: { userId_month: { userId: req.userId, month } },
       }),
+      prisma.budgetCategory.aggregate({
+        where: { userId: req.userId },
+        _sum: { monthlyAllocation: true },
+      }),
     ]);
 
     const totalIncome = incomeEntries.reduce((s, e) => s + Number(e.amountPhp), 0);
     const totalExpenses = transactions.reduce((s, t) => s + Number(t.amount), 0);
     const totalDebtPaid = debtPayments.reduce((s, p) => s + Number(p.amount), 0);
-    const computedSurplus = totalIncome - totalExpenses - totalDebtPaid;
+    const totalAllocated = Number(budgetAgg._sum.monthlyAllocation ?? 0);
+    const effectiveExpenses = Math.max(totalExpenses, totalAllocated);
+    const computedSurplus = totalIncome - effectiveExpenses - totalDebtPaid;
 
     // Carryover = accumulated net surplus from all previous months (dynamic, no Save Plan needed)
     const histTotalIncome = histIncome.reduce((s, e) => s + Number(e.amountPhp), 0);
@@ -67,6 +73,8 @@ router.get('/:month', async (req, res) => {
       month,
       totalIncome,
       totalExpenses,
+      totalAllocated,
+      effectiveExpenses,
       totalDebtPaid,
       surplus,
       carryover,

@@ -11,6 +11,8 @@ import settingsRoutes from './routes/settings.js';
 import trendsRoutes from './routes/trends.js';
 import goalsRoutes from './routes/goals.js';
 import paymentMethodsRoutes from './routes/paymentMethods.js';
+import adminRoutes from './routes/admin.js';
+import exportRoutes from './routes/export.js';
 import { startReminderJob } from './jobs/reminder.js';
 
 const app = express();
@@ -29,6 +31,8 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/trends', trendsRoutes);
 app.use('/api/goals', goalsRoutes);
 app.use('/api/payment-methods', paymentMethodsRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/export', exportRoutes);
 
 startReminderJob();
 

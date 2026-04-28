@@ -11,10 +11,19 @@ import Transactions from './pages/Transactions.jsx';
 import Trends from './pages/Trends.jsx';
 import Settings from './pages/Settings.jsx';
 import Goals from './pages/Goals.jsx';
+import Admin from './pages/Admin.jsx';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
   return token ? children : <Navigate to="/login" replace />;
+}
+
+function AdminRoute({ children }) {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!token) return <Navigate to="/login" replace />;
+  if (!user.isAdmin) return <Navigate to="/dashboard" replace />;
+  return children;
 }
 
 export default function App() {
@@ -42,6 +51,7 @@ export default function App() {
           <Route path="goals" element={<Goals />} />
           <Route path="trends" element={<Trends />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="admin" element={<AdminRoute><Admin /></AdminRoute>} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -40,11 +40,23 @@ export function generateAmortization(balance, annualRate, monthlyPayment, startD
 
 router.get('/', async (req, res) => {
   try {
-    const debts = await prisma.debt.findMany({
-      where: { userId: req.userId },
-      orderBy: { interestRate: 'desc' },
-    });
-    res.json(debts);
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const [debts, thisMonthPayments] = await Promise.all([
+      prisma.debt.findMany({
+        where: { userId: req.userId },
+        orderBy: { interestRate: 'desc' },
+      }),
+      prisma.debtPayment.findMany({
+        where: { userId: req.userId, date: { gte: monthStart, lt: monthEnd } },
+        select: { debtId: true },
+      }),
+    ]);
+
+    const paidThisMonthIds = new Set(thisMonthPayments.map(p => p.debtId));
+    res.json(debts.map(d => ({ ...d, paidThisMonth: paidThisMonthIds.has(d.id) })));
   } catch (err) {
     res.status(500).json({ error: 'Server error.' });
   }
@@ -52,7 +64,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { name, provider, type, status, currentBalance, originalBalance, interestRate, minPayment, plannedStartDate, clearDate } = req.body;
+    const { name, provider, type, status, currentBalance, originalBalance, interestRate, minPayment, plannedStartDate, clearDate, color } = req.body;
 
     const debt = await prisma.debt.create({
       data: {
@@ -67,6 +79,7 @@ router.post('/', async (req, res) => {
         minPayment,
         plannedStartDate: plannedStartDate ? new Date(plannedStartDate) : null,
         clearDate: clearDate ? new Date(clearDate) : null,
+        color: color || null,
       },
     });
 
@@ -104,6 +117,7 @@ router.put('/:id', async (req, res) => {
         clearDate: req.body.clearDate !== undefined
           ? (req.body.clearDate ? new Date(req.body.clearDate) : null)
           : debt.clearDate,
+        color: req.body.color !== undefined ? (req.body.color || null) : debt.color,
       },
     });
 

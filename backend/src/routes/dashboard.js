@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 
     const [incomeEntries, transactions, monthDebtPayments,
            histIncome, histExpenses, histDebtPayments,
-           debts, settings, recentTransactions, goals, upcomingAmortization] = await Promise.all([
+           debts, settings, recentTransactions, goals, upcomingAmortization, budgetAgg] = await Promise.all([
       prisma.incomeEntry.findMany({
         where: { userId: req.userId, date: { gte: monthStart, lt: monthEnd } },
       }),
@@ -73,12 +73,18 @@ router.get('/', async (req, res) => {
         include: { debt: { select: { id: true, name: true, provider: true } } },
         orderBy: { paymentDate: 'asc' },
       }),
+      prisma.budgetCategory.aggregate({
+        where: { userId: req.userId },
+        _sum: { monthlyAllocation: true },
+      }),
     ]);
 
     const totalIncome = incomeEntries.reduce((s, e) => s + Number(e.amountPhp), 0);
     const totalSpent = transactions.reduce((s, t) => s + Number(t.amount), 0);
     const totalDebtPaid = monthDebtPayments.reduce((s, p) => s + Number(p.amount), 0);
-    const thisMonthSurplus = totalIncome - totalSpent - totalDebtPaid;
+    const totalAllocated = Number(budgetAgg._sum.monthlyAllocation ?? 0);
+    const effectiveExpenses = Math.max(totalSpent, totalAllocated);
+    const thisMonthSurplus = totalIncome - effectiveExpenses - totalDebtPaid;
 
     // Carryover wallet: accumulated unspent net from all previous months
     const histTotalIncome = histIncome.reduce((s, e) => s + Number(e.amountPhp), 0);
@@ -111,6 +117,8 @@ router.get('/', async (req, res) => {
       : null;
     const onTrack = projectedPayoffDate ? projectedPayoffDate <= goalDate : false;
 
+    const paidThisMonthIds = new Set(monthDebtPayments.map(p => p.debtId));
+
     const topDebts = activeDebts.slice(0, 5).map(d => ({
       id: d.id,
       name: d.name,
@@ -120,6 +128,7 @@ router.get('/', async (req, res) => {
       originalBalance: Number(d.originalBalance),
       interestRate: Number(d.interestRate),
       minPayment: Number(d.minPayment),
+      paidThisMonth: paidThisMonthIds.has(d.id),
       percentPaid: Number(d.originalBalance) > 0
         ? ((Number(d.originalBalance) - Number(d.currentBalance)) / Number(d.originalBalance)) * 100
         : 0,
@@ -151,6 +160,8 @@ router.get('/', async (req, res) => {
       thisMonth: {
         income: totalIncome,
         spent: totalSpent,
+        totalAllocated,
+        effectiveExpenses,
         debtPaid: totalDebtPaid,
         surplus,
         carryover,
