@@ -11,14 +11,14 @@ router.get('/', async (req, res) => {
     const now = new Date();
 
     const monthKeys = Array.from({ length: months }, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - (months - 1 - i), 1);
-      return { year: d.getFullYear(), month: d.getMonth() + 1, key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` };
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - (months - 1 - i), 1));
+      return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, key: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}` };
     });
 
     const incomeVsExpenses = await Promise.all(
       monthKeys.map(async ({ year, month, key }) => {
-        const start = new Date(year, month - 1, 1);
-        const end = new Date(year, month, 1);
+        const start = new Date(Date.UTC(year, month - 1, 1));
+        const end = new Date(Date.UTC(year, month, 1));
 
         const [income, expenses] = await Promise.all([
           prisma.incomeEntry.aggregate({
@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
 
     const debtHistory = await Promise.all(
       monthKeys.map(async ({ year, month, key }) => {
-        const end = new Date(year, month, 1);
+        const end = new Date(Date.UTC(year, month, 1));
 
         const payments = await prisma.debtPayment.aggregate({
           where: { userId: req.userId, date: { lt: end } },
@@ -66,8 +66,8 @@ router.get('/', async (req, res) => {
 
     const categoryTrend = await Promise.all(
       monthKeys.slice(-6).map(async ({ year, month, key }) => {
-        const start = new Date(year, month - 1, 1);
-        const end = new Date(year, month, 1);
+        const start = new Date(Date.UTC(year, month - 1, 1));
+        const end = new Date(Date.UTC(year, month, 1));
 
         const txByCategory = await Promise.all(
           categories.map(async cat => {
@@ -91,8 +91,8 @@ router.get('/', async (req, res) => {
     // Historical: last 12 months (actual, from payments)
     // Projected:  next 12 months (from unpaid amortization schedule)
     const futureMonthKeys = Array.from({ length: 12 }, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() + 1 + i, 1);
-      return { year: d.getFullYear(), month: d.getMonth() + 1, key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` };
+      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1 + i, 1));
+      return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, key: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}` };
     });
 
     const activeDebts = await prisma.debt.findMany({
@@ -106,7 +106,7 @@ router.get('/', async (req, res) => {
       orderBy: { date: 'asc' },
     });
 
-    const futureStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const futureStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
     const allAmort = await prisma.amortizationEntry.findMany({
       where: {
         debtId: { in: activeDebts.map(d => d.id) },
@@ -131,7 +131,7 @@ router.get('/', async (req, res) => {
       const groupAmort = allAmort.filter(e => debtIds.has(e.debtId));
 
       const historicalData = monthKeys.map(({ year, month, key }) => {
-        const monthEnd = new Date(year, month, 1);
+        const monthEnd = new Date(Date.UTC(year, month, 1));
         let total = 0;
         let hasAny = false;
 
@@ -149,8 +149,8 @@ router.get('/', async (req, res) => {
       });
 
       const projectedData = futureMonthKeys.map(({ year, month, key }) => {
-        const monthStart = new Date(year, month - 1, 1);
-        const monthEnd = new Date(year, month, 1);
+        const monthStart = new Date(Date.UTC(year, month - 1, 1));
+        const monthEnd = new Date(Date.UTC(year, month, 1));
         let total = null;
 
         for (const debt of debts) {

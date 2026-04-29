@@ -25,7 +25,7 @@ router.get('/contributions', async (req, res) => {
     const where = { userId: req.userId };
     if (month) {
       const [y, m] = month.split('-').map(Number);
-      where.date = { gte: new Date(y, m - 1, 1), lt: new Date(y, m, 1) };
+      where.date = { gte: new Date(Date.UTC(y, m - 1, 1)), lt: new Date(Date.UTC(y, m, 1)) };
     }
     const contributions = await prisma.goalContribution.findMany({
       where,

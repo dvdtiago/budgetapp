@@ -9,13 +9,16 @@ export function generateAmortization(balance, annualRate, monthlyPayment, startD
   const entries = [];
   const monthlyRate = Number(annualRate) / 12;
   let remaining = Number(balance);
+
+  if (remaining > 0.01 && Number(monthlyPayment) <= remaining * monthlyRate) {
+    return { entries: [], paymentTooLow: true };
+  }
+
   let date = new Date(startDate);
   let num = 1;
 
   while (remaining > 0.01 && num <= 600) {
     const interest = remaining * monthlyRate;
-    if (monthlyPayment <= interest) break;
-
     const actualPayment = remaining + interest > Number(monthlyPayment)
       ? Number(monthlyPayment)
       : remaining + interest;
@@ -35,14 +38,14 @@ export function generateAmortization(balance, annualRate, monthlyPayment, startD
     date.setMonth(date.getMonth() + 1);
   }
 
-  return entries;
+  return { entries, paymentTooLow: false };
 }
 
 router.get('/', async (req, res) => {
   try {
     const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const monthEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 
     const [debts, thisMonthPayments] = await Promise.all([
       prisma.debt.findMany({
@@ -126,7 +129,7 @@ router.put('/:id', async (req, res) => {
       const startDate = new Date();
       startDate.setDate(1);
       startDate.setMonth(startDate.getMonth() + 1);
-      const entries = generateAmortization(updated.currentBalance, newRate, newMinPayment, startDate);
+      const { entries } = generateAmortization(updated.currentBalance, newRate, newMinPayment, startDate);
       await prisma.amortizationEntry.deleteMany({ where: { debtId: debt.id, isPaid: false } });
       if (entries.length > 0) {
         await prisma.amortizationEntry.createMany({
@@ -163,7 +166,12 @@ router.get('/:id/amortization', async (req, res) => {
       orderBy: { paymentNumber: 'asc' },
     });
 
-    res.json(entries);
+    const monthlyRate = Number(debt.interestRate) / 12;
+    const paymentTooLow = entries.length === 0 &&
+      Number(debt.currentBalance) > 0 &&
+      Number(debt.minPayment) <= Number(debt.currentBalance) * monthlyRate;
+
+    res.json({ entries, paymentTooLow });
   } catch (err) {
     res.status(500).json({ error: 'Server error.' });
   }
@@ -176,7 +184,7 @@ router.post('/:id/amortization/generate', async (req, res) => {
 
     const startDate = req.body.startDate ? new Date(req.body.startDate) : new Date();
 
-    const entries = generateAmortization(
+    const { entries, paymentTooLow } = generateAmortization(
       debt.currentBalance,
       debt.interestRate,
       debt.minPayment,
@@ -184,11 +192,13 @@ router.post('/:id/amortization/generate', async (req, res) => {
     );
 
     await prisma.amortizationEntry.deleteMany({ where: { debtId: debt.id } });
-    await prisma.amortizationEntry.createMany({
-      data: entries.map(e => ({ ...e, debtId: debt.id })),
-    });
+    if (entries.length > 0) {
+      await prisma.amortizationEntry.createMany({
+        data: entries.map(e => ({ ...e, debtId: debt.id })),
+      });
+    }
 
-    res.json(entries);
+    res.json({ entries, paymentTooLow });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error.' });
@@ -220,6 +230,10 @@ router.post('/:id/payment', async (req, res) => {
         status: newBalance <= 0 ? 'PAID_OFF' : debt.status,
       },
     });
+
+    if (newBalance <= 0) {
+      await prisma.amortizationEntry.deleteMany({ where: { debtId: debt.id, isPaid: false } });
+    }
 
     res.json({ payment, debt: updatedDebt });
   } catch (err) {
@@ -254,6 +268,10 @@ router.put('/:debtId/payment/:paymentId', async (req, res) => {
       data: { currentBalance: newBalance, status: newBalance <= 0 ? 'PAID_OFF' : debt.status },
     });
 
+    if (newBalance <= 0) {
+      await prisma.amortizationEntry.deleteMany({ where: { debtId: payment.debtId, isPaid: false } });
+    }
+
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: 'Server error.' });
@@ -271,6 +289,43 @@ router.get('/:id/payments', async (req, res) => {
     });
 
     res.json(payments);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+router.delete('/:debtId/payments/:paymentId', async (req, res) => {
+  try {
+    const payment = await prisma.debtPayment.findFirst({
+      where: { id: Number(req.params.paymentId), userId: req.userId },
+    });
+    if (!payment) return res.status(404).json({ error: 'Payment not found.' });
+
+    const debt = await prisma.debt.findUnique({ where: { id: payment.debtId } });
+    const newBalance = Number(debt.currentBalance) + Number(payment.amount);
+
+    await prisma.debtPayment.delete({ where: { id: payment.id } });
+
+    await prisma.debt.update({
+      where: { id: payment.debtId },
+      data: {
+        currentBalance: newBalance,
+        status: debt.status === 'PAID_OFF' ? 'ACTIVE' : debt.status,
+      },
+    });
+
+    const startDate = new Date();
+    startDate.setDate(1);
+    startDate.setMonth(startDate.getMonth() + 1);
+    const { entries } = generateAmortization(newBalance, debt.interestRate, debt.minPayment, startDate);
+    await prisma.amortizationEntry.deleteMany({ where: { debtId: payment.debtId, isPaid: false } });
+    if (entries.length > 0) {
+      await prisma.amortizationEntry.createMany({
+        data: entries.map(e => ({ ...e, debtId: payment.debtId })),
+      });
+    }
+
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: 'Server error.' });
   }
@@ -307,7 +362,7 @@ router.post('/:id/balance-adjustment', async (req, res) => {
     const startDate = new Date();
     startDate.setDate(1);
     startDate.setMonth(startDate.getMonth() + 1);
-    const entries = generateAmortization(nb, debt.interestRate, debt.minPayment, startDate);
+    const { entries } = generateAmortization(nb, debt.interestRate, debt.minPayment, startDate);
     await prisma.amortizationEntry.deleteMany({ where: { debtId: debt.id, isPaid: false } });
     if (entries.length > 0) {
       await prisma.amortizationEntry.createMany({

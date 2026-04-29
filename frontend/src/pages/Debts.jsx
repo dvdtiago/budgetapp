@@ -215,18 +215,23 @@ function BalanceUpdateForm({ debt, onSave, onCancel }) {
 
 function AmortizationTable({ debtId }) {
   const [entries, setEntries] = useState(null);
+  const [paymentTooLow, setPaymentTooLow] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
 
   useEffect(() => {
-    api.get(`/debts/${debtId}/amortization`).then(r => setEntries(r.data));
+    api.get(`/debts/${debtId}/amortization`).then(r => {
+      setEntries(r.data.entries);
+      setPaymentTooLow(r.data.paymentTooLow);
+    });
   }, [debtId]);
 
   async function generate() {
     setGenerating(true);
     try {
       const r = await api.post(`/debts/${debtId}/amortization/generate`, { startDate });
-      setEntries(r.data);
+      setEntries(r.data.entries);
+      setPaymentTooLow(r.data.paymentTooLow);
     } finally {
       setGenerating(false);
     }
@@ -244,6 +249,11 @@ function AmortizationTable({ debtId }) {
           </button>
         </div>
       </div>
+      {paymentTooLow && (
+        <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+          Monthly payment is too low to cover interest. Increase the payment amount to generate a payoff timeline.
+        </p>
+      )}
       {entries && entries.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -275,7 +285,7 @@ function AmortizationTable({ debtId }) {
           )}
         </div>
       ) : (
-        <p className="text-xs text-neutral-400 dark:text-neutral-500">No plan yet. Click "Generate" to see how your balance drops each month as you make payments.</p>
+        !paymentTooLow && <p className="text-xs text-neutral-400 dark:text-neutral-500">No plan yet. Click "Generate" to see how your balance drops each month as you make payments.</p>
       )}
     </div>
   );

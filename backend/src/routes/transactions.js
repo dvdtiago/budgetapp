@@ -29,8 +29,8 @@ router.get('/', async (req, res) => {
     if (month) {
       const [year, m] = month.split('-').map(Number);
       where.date = {
-        gte: new Date(year, m - 1, 1),
-        lt: new Date(year, m, 1),
+        gte: new Date(Date.UTC(year, m - 1, 1)),
+        lt: new Date(Date.UTC(year, m, 1)),
       };
     }
 

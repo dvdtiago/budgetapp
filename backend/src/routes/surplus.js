@@ -9,11 +9,11 @@ router.get('/:month', async (req, res) => {
   try {
     const { month } = req.params;
     const [year, m] = month.split('-').map(Number);
-    const monthStart = new Date(year, m - 1, 1);
-    const monthEnd = new Date(year, m, 1);
+    const monthStart = new Date(Date.UTC(year, m - 1, 1));
+    const monthEnd = new Date(Date.UTC(year, m, 1));
 
     // Look back up to 24 months to accumulate unspent surplus
-    const historyStart = new Date(year, m - 25, 1);
+    const historyStart = new Date(Date.UTC(year, m - 25, 1));
 
     const [incomeEntries, transactions, debtPayments,
            histIncome, histExpenses, histDebtPayments,

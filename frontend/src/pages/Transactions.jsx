@@ -75,6 +75,12 @@ export default function Transactions() {
     load();
   }
 
+  async function deletePayment(entry) {
+    if (!confirm('Delete this debt payment? The balance will be reversed.')) return;
+    await api.delete(`/debts/${entry.debtId}/payments/${entry.id}`);
+    load();
+  }
+
   async function submitNewEntry(e) {
     e.preventDefault();
     setSaving(true);
@@ -338,12 +344,17 @@ export default function Transactions() {
             {entry._type === 'expense' && entry.paymentMethod && (
               <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5">via {entry.paymentMethod.name}</p>
             )}
-            {entry._type === 'expense' && (
+            {(entry._type === 'expense' || entry._type === 'payment') && (
               <div className="flex items-center gap-2 mt-2">
-                <button onClick={() => setEditingTx(entry)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
-                  <Pencil size={14} /> Edit
-                </button>
-                <button onClick={() => deleteTx(entry.id)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                {entry._type === 'expense' && (
+                  <button onClick={() => setEditingTx(entry)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                    <Pencil size={14} /> Edit
+                  </button>
+                )}
+                <button
+                  onClick={() => entry._type === 'expense' ? deleteTx(entry.id) : deletePayment(entry)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-neutral-500 dark:text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
                   <Trash2 size={14} /> Delete
                 </button>
               </div>
@@ -393,12 +404,17 @@ export default function Transactions() {
                   </span>
                 </td>
                 <td className="px-4 py-4 w-16">
-                  {entry._type === 'expense' && (
+                  {(entry._type === 'expense' || entry._type === 'payment') && (
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => setEditingTx(entry)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                        <Pencil size={13} />
-                      </button>
-                      <button onClick={() => deleteTx(entry.id)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                      {entry._type === 'expense' && (
+                        <button onClick={() => setEditingTx(entry)} className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">
+                          <Pencil size={13} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => entry._type === 'expense' ? deleteTx(entry.id) : deletePayment(entry)}
+                        className="p-1.5 rounded-lg text-neutral-300 dark:text-neutral-600 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
                         <Trash2 size={13} />
                       </button>
                     </div>
