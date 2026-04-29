@@ -62,7 +62,7 @@ export default function SurplusModal({ month, onClose }) {
         .map(g => api.post(`/goals/${g.id}/contribution`, {
           amount: parseFloat(goalAllocations[g.id]),
           date: today,
-          notes: `Leftover cash allocation — ${month}`,
+          notes: `Unbudgeted allocation — ${month}`,
         }));
       await Promise.all(goalUpdates);
 
@@ -82,35 +82,42 @@ export default function SurplusModal({ month, onClose }) {
               <>
                 <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">
                   {data.surplus > 0
-                    ? <>Where should your extra <span className="text-green-600 dark:text-green-400">{formatPHP(data.surplus)}</span> go?</>
-                    : 'No leftover cash this month'}
+                    ? <>Where should your unbudgeted <span className="text-green-600 dark:text-green-400">{formatPHP(data.surplus)}</span> go?</>
+                    : 'Nothing unbudgeted this month'}
                 </h2>
                 <p className="text-xs text-neutral-400 dark:text-neutral-400 mt-0.5 max-w-xs">
                   {data.surplus > 0
                     ? 'Use the magic wand to put it toward your highest-interest debt first, or split it manually between your debts and goals.'
                     : 'Your income covered your expenses and debt payments — nothing left to distribute.'}
                 </p>
-                <div className="text-xs text-neutral-400 dark:text-neutral-400 mt-1.5 space-y-0.5">
-                  <p>Income: <span className="text-green-600 dark:text-green-400 font-medium">{formatPHP(data.totalIncome)}</span>
-                  {' · '}Expenses: <span className="font-medium text-neutral-600 dark:text-neutral-300">
-                    {data.totalAllocated > data.totalExpenses
-                      ? <>{formatPHP(data.totalAllocated)} <span className="text-neutral-400 dark:text-neutral-500 font-normal">(budgeted; {formatPHP(data.totalExpenses)} logged)</span></>
-                      : formatPHP(data.totalExpenses)}
-                  </span>
-                  {' · '}Debt paid: <span className="font-medium text-brand-600 dark:text-brand-400">{formatPHP(data.totalDebtPaid)}</span></p>
+                <div className="mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-700 text-xs space-y-1.5">
+                  <div className="flex justify-between gap-4">
+                    <span className="text-neutral-500 dark:text-neutral-400">Income</span>
+                    <span className="text-green-600 dark:text-green-400 font-medium">{formatPHP(data.totalIncome)}</span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-neutral-500 dark:text-neutral-400">
+                      Expenses
+                      {data.totalAllocated > data.totalExpenses && (
+                        <span className="text-neutral-400 dark:text-neutral-500"> · {formatPHP(data.totalExpenses)} spent</span>
+                      )}
+                    </span>
+                    <span className="font-medium text-neutral-600 dark:text-neutral-300">− {formatPHP(data.totalAllocated > data.totalExpenses ? data.totalAllocated : data.totalExpenses)}</span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-neutral-500 dark:text-neutral-400">Debt paid</span>
+                    <span className="font-medium text-brand-600 dark:text-brand-400">− {formatPHP(data.totalDebtPaid)}</span>
+                  </div>
                   {data.carryover > 0 && (
-                    <p className="text-green-600 dark:text-green-400 font-medium">
-                      ↩ Includes {formatPHP(data.carryover)} rolled over from {(() => {
-                        const [y, m] = month.split('-').map(Number);
-                        const prev = new Date(y, m - 2, 1);
-                        return prev.toLocaleString('default', { month: 'long', year: 'numeric' });
-                      })()}
-                    </p>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-green-600 dark:text-green-400">From prior months</span>
+                      <span className="text-green-600 dark:text-green-400 font-medium">+ {formatPHP(data.carryover)}</span>
+                    </div>
                   )}
                 </div>
               </>
             ) : (
-              <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Leftover Cash</h2>
+              <h2 className="font-semibold text-neutral-800 dark:text-neutral-100">Unbudgeted</h2>
             )}
           </div>
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700">

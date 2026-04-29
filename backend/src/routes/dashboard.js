@@ -82,6 +82,13 @@ router.get('/', async (req, res) => {
     const totalIncome = incomeEntries.reduce((s, e) => s + Number(e.amountPhp), 0);
     const totalSpent = transactions.reduce((s, t) => s + Number(t.amount), 0);
     const totalDebtPaid = monthDebtPayments.reduce((s, p) => s + Number(p.amount), 0);
+
+    const categorySpending = {};
+    for (const t of transactions) {
+      if (t.categoryId) {
+        categorySpending[t.categoryId] = (categorySpending[t.categoryId] || 0) + Number(t.amount);
+      }
+    }
     const totalAllocated = Number(budgetAgg._sum.monthlyAllocation ?? 0);
     const effectiveExpenses = Math.max(totalSpent, totalAllocated);
     const thisMonthSurplus = totalIncome - effectiveExpenses - totalDebtPaid;
@@ -165,6 +172,7 @@ router.get('/', async (req, res) => {
         debtPaid: totalDebtPaid,
         surplus,
         carryover,
+        categorySpending,
       },
       debts: {
         totalRemaining: totalDebtRemaining,

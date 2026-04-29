@@ -293,7 +293,7 @@ export default function Budget() {
             onClick={() => setShowSurplus(true)}
             className="btn-secondary"
           >
-            <Target size={15} /> Leftover Cash
+            <Target size={15} /> Unbudgeted
           </button>
           <button onClick={() => { setShowAddTx(s => !s); }} className="btn-primary">
             <Plus size={15} /> Log expense
@@ -392,8 +392,8 @@ export default function Budget() {
               <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `₱${(v / 1000).toFixed(0)}k`} />
               <Tooltip formatter={v => formatPHP(v)} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="Budgeted" fill="#FDE4C8" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Spent" fill="#E07030" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Budgeted" fill="#D1D5DB" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Spent" fill="#F97316" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -664,10 +664,10 @@ export default function Budget() {
         {!hasPlan ? (
           <div className="px-4 py-5 text-center">
             <p className="text-sm text-neutral-400 dark:text-neutral-500 mb-3">
-              No plan for this month yet. Use Leftover Cash to decide where your surplus goes.
+              No plan for this month yet. Use Unbudgeted to decide where your surplus goes.
             </p>
             <button onClick={() => setShowSurplus(true)} className="btn-secondary text-sm">
-              <Target size={14} /> Open Leftover Cash
+              <Target size={14} /> Open Unbudgeted
             </button>
           </div>
         ) : (

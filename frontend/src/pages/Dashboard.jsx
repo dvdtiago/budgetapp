@@ -5,8 +5,6 @@ import { format } from 'date-fns';
 import api from '../lib/api.js';
 import { formatPHP, formatPHPWhole, formatDate, formatPercent, debtTypeLabel } from '../lib/utils.js';
 import { useMonth } from '../lib/MonthContext.jsx';
-import { useSurplus } from '../lib/SurplusContext.jsx';
-import SurplusModal from '../components/SurplusModal.jsx';
 
 function StatCard({ label, amount, sub, color = 'text-neutral-800 dark:text-neutral-100', icon }) {
   return (
@@ -23,9 +21,9 @@ function StatCard({ label, amount, sub, color = 'text-neutral-800 dark:text-neut
 
 function ProgressBar({ percent, color = 'bg-brand-600' }) {
   return (
-    <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2">
+    <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-1.5">
       <div
-        className={`${color} h-2 rounded-full transition-all`}
+        className={`${color} h-1.5 rounded-full transition-all`}
         style={{ width: `${Math.min(100, Math.max(0, percent))}%` }}
       />
     </div>
@@ -34,11 +32,9 @@ function ProgressBar({ percent, color = 'bg-brand-600' }) {
 
 export default function Dashboard() {
   const { month } = useMonth();
-  const { plan, hasPlan } = useSurplus();
   const [data, setData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showSurplus, setShowSurplus] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
@@ -71,10 +67,6 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold text-neutral-800 dark:text-neutral-100">{greeting}, {user.name?.split(' ')[0]} 👋</h1>
           <p className="text-sm text-neutral-400 dark:text-neutral-400">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
         </div>
-        <button onClick={() => setShowSurplus(true)} className="btn-primary shrink-0">
-          <Target size={15} />
-          Leftover Cash
-        </button>
       </div>
 
       {/* Stat cards */}
@@ -82,12 +74,12 @@ export default function Dashboard() {
         <StatCard label="Income this month" amount={thisMonth.income} icon={<Wallet size={18} />} />
         <StatCard label="Expenses logged" amount={thisMonth.spent} icon={<TrendingDown size={18} />} />
         <StatCard
-          label="Leftover Cash"
+          label="Unbudgeted"
           amount={thisMonth.surplus}
           icon={<TrendingUp size={18} />}
           color={thisMonth.surplus >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}
           sub={thisMonth.carryover > 0
-            ? `incl. ${formatPHPWhole(thisMonth.carryover)} rolled over`
+            ? `incl. ${formatPHPWhole(thisMonth.carryover)} from prior months`
             : thisMonth.totalAllocated > thisMonth.spent
             ? `${formatPHPWhole(thisMonth.totalAllocated)} budgeted for expenses`
             : `${formatPHPWhole(thisMonth.debtPaid ?? 0)} to debts`}
@@ -262,9 +254,10 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-3">
               {categories.slice(0, 5).map(cat => {
-                const pct = Number(cat.monthlyAllocation) > 0
-                  ? Math.min(100, (thisMonth.spent / totalAllocated) * 100)
-                  : 0;
+                const spent = thisMonth.categorySpending?.[cat.id] ?? 0;
+                const alloc = Number(cat.monthlyAllocation);
+                const pct = alloc > 0 ? Math.min(100, (spent / alloc) * 100) : 0;
+                const over = spent > alloc && alloc > 0;
                 return (
                   <div key={cat.id}>
                     <div className="flex items-center justify-between mb-1">
@@ -276,7 +269,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-1.5">
-                      <div className="bg-brand-400 h-1.5 rounded-full" style={{ width: `${pct}%` }} />
+                      <div className={`h-1.5 rounded-full transition-all ${over ? 'bg-red-400' : 'bg-brand-400'}`} style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
@@ -288,34 +281,6 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-
-      {/* ── Surplus Plan widget ── */}
-      {hasPlan && plan.length > 0 && (
-        <div className="card !p-0 overflow-hidden">
-          <div className="px-4 py-3 flex items-center justify-between border-b border-neutral-100 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40">
-            <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Surplus Plan</span>
-            <Link to="/budget" className="text-xs text-brand-600 hover:underline flex items-center gap-1">
-              Go to Budget <ChevronRight size={12} />
-            </Link>
-          </div>
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                {formatPHP(plan.reduce((s, a) => s + Number(a.amount), 0))} planned across {plan.length} debt{plan.length !== 1 ? 's' : ''}
-              </p>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                {formatPHP(thisMonth.debtPaid)} paid so far
-              </p>
-            </div>
-            <div className="h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-700 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-brand-500 transition-all duration-500"
-                style={{ width: `${Math.min(100, plan.reduce((s, a) => s + Number(a.amount), 0) > 0 ? (thisMonth.debtPaid / plan.reduce((s, a) => s + Number(a.amount), 0)) * 100 : 0)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Recent Transactions — full width */}
       <div className="card p-0 overflow-hidden">
@@ -365,7 +330,6 @@ export default function Dashboard() {
         )}
       </div>
 
-      {showSurplus && <SurplusModal month={month} onClose={() => setShowSurplus(false)} />}
     </div>
   );
 }
