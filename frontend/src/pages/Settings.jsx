@@ -31,6 +31,8 @@ export default function Settings() {
   const [pwError, setPwError] = useState('');
   const [pwSaved, setPwSaved] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState(null);
 
   // Payment methods
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -96,6 +98,20 @@ export default function Settings() {
       setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function sendTestEmail() {
+    setTestingEmail(true);
+    setTestEmailResult(null);
+    try {
+      const r = await api.post('/settings/test-email');
+      setTestEmailResult({ ok: true, msg: `Test email sent to ${r.data.to}` });
+    } catch (err) {
+      setTestEmailResult({ ok: false, msg: err.response?.data?.error ?? 'Failed to send test email.' });
+    } finally {
+      setTestingEmail(false);
+      setTimeout(() => setTestEmailResult(null), 5000);
     }
   }
 
@@ -213,6 +229,14 @@ export default function Settings() {
               </div>
             </>
           )}
+          {testEmailResult && (
+            <div className={`text-sm px-3 py-2 rounded-lg ${testEmailResult.ok ? 'bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400'}`}>
+              {testEmailResult.msg}
+            </div>
+          )}
+          <button type="button" onClick={sendTestEmail} disabled={testingEmail} className="btn-secondary text-sm">
+            {testingEmail ? 'Sending…' : 'Send test email'}
+          </button>
         </div>
 
         <button type="submit" className="btn-primary w-full" disabled={saving}>

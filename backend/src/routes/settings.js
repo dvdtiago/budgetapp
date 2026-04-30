@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { authenticate } from '../middleware/auth.js';
+import { sendReminderEmail } from '../services/email.js';
 
 const router = Router();
 router.use(authenticate);
@@ -40,6 +41,18 @@ router.put('/', async (req, res) => {
     res.json(settings);
   } catch (err) {
     res.status(500).json({ error: 'Server error.' });
+  }
+});
+
+router.post('/test-email', async (req, res) => {
+  try {
+    const settings = await prisma.settings.findUnique({ where: { userId: req.userId } });
+    const user = await prisma.user.findUnique({ where: { id: req.userId }, select: { name: true, email: true } });
+    const to = settings?.reminderEmail || user.email;
+    await sendReminderEmail({ to, name: user.name, totalDebt: 0, surplus: 0, goalDate: settings?.goalDate });
+    res.json({ ok: true, to });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
