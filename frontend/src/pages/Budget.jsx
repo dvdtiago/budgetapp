@@ -14,13 +14,13 @@ import SurplusModal from '../components/SurplusModal.jsx';
 import EditTransactionModal from '../components/EditTransactionModal.jsx';
 
 // ── Thin progress bar (h-1) ───────────────────────────────────────────────────
-function ThinBar({ value, max, color = 'bg-brand-500' }) {
+function ThinBar({ value, max, color = 'bg-blue-500' }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   const over = value > max && max > 0;
   return (
-    <div className="h-1 rounded-full bg-neutral-100 dark:bg-neutral-700 overflow-hidden">
+    <div className="h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-700 overflow-hidden">
       <div
-        className={`h-full rounded-full transition-all duration-500 ${over ? 'bg-red-400' : color}`}
+        className={`h-1.5 rounded-full transition-all duration-500 ${over ? 'bg-green-500' : color}`}
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -702,7 +702,7 @@ export default function Budget() {
                   )}
                 </div>
                 <div className="px-4 pb-2.5">
-                  <ThinBar value={paid} max={planned} color="bg-brand-500" />
+                  <ThinBar value={paid} max={planned} color="bg-blue-500" />
                 </div>
                 {payingDebtId === item.debtId && (
                   <InlinePayForm

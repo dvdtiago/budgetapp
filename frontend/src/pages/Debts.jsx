@@ -371,7 +371,7 @@ function DebtCard({ debt, onDelete, onPayment, onBalanceUpdate, onEdit }) {
           <div className="mt-2">
             <ProgressBar
               percent={percent}
-              color={debt.status === 'PAID_OFF' ? 'bg-green-500' : 'bg-brand-600'}
+              color={debt.status === 'PAID_OFF' ? 'bg-green-500' : 'bg-blue-500'}
               hexColor={debt.status !== 'PAID_OFF' && debt.color ? debt.color : undefined}
             />
           </div>

@@ -152,9 +152,9 @@ function ContributionForm({ goal, onSave, onCancel }) {
 
 function ProgressBar({ percent, type, hexColor }) {
   return (
-    <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-2">
+    <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-1.5">
       <div
-        className={`h-2 rounded-full transition-all ${hexColor ? '' : (PROGRESS_COLORS[type] ?? 'bg-brand-500')}`}
+        className={`h-1.5 rounded-full transition-all ${hexColor ? '' : (PROGRESS_COLORS[type] ?? 'bg-blue-500')}`}
         style={{ width: `${Math.min(100, percent)}%`, ...(hexColor ? { backgroundColor: hexColor } : {}) }}
       />
     </div>

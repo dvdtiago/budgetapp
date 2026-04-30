@@ -144,10 +144,9 @@ export default function Trends() {
               <Tooltip content={<CurrencyTooltip />} />
               <Legend
                 formatter={(value) => {
-                  const isProjected = value.endsWith('_projected');
-                  const providerKey = value.replace(/_actual$/, '').replace(/_projected$/, '');
+                  const providerKey = value.replace(/_actual$/, '');
                   const group = debtBalances.find(d => d.provider.replace(/\W+/g, '_') === providerKey);
-                  return `${group?.provider ?? value}${isProjected ? ' (proj.)' : ''}`;
+                  return group?.provider ?? value;
                 }}
               />
               {debtBalances.map((group, i) => {
@@ -174,6 +173,7 @@ export default function Trends() {
                       strokeDasharray="5 5"
                       dot={false}
                       connectNulls={false}
+                      legendType="none"
                     />
                   </>
                 );

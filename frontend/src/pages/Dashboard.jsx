@@ -177,7 +177,7 @@ export default function Dashboard() {
                 </div>
                 <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-1.5">
                   <div
-                    className="h-1.5 rounded-full bg-brand-500 transition-all"
+                    className="h-1.5 rounded-full bg-blue-500 transition-all"
                     style={{ width: `${Math.min(100, goal.percentComplete)}%` }}
                   />
                 </div>
@@ -269,7 +269,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <div className="w-full bg-neutral-100 dark:bg-neutral-700 rounded-full h-1.5">
-                      <div className={`h-1.5 rounded-full transition-all ${over ? 'bg-red-400' : 'bg-brand-400'}`} style={{ width: `${pct}%` }} />
+                      <div className={`h-1.5 rounded-full transition-all ${over ? 'bg-red-400' : 'bg-blue-500'}`} style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
