@@ -39,7 +39,8 @@ export async function sendReminderEmail({ to, name, totalDebt, surplus, goalDate
         </tr>
       </table>
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;" />
-      <p style="color: #6b7280; font-size: 14px;">Keep it up — every payment counts. Open your Budget Tracker to log this week's activity.</p>
+      <p style="color: #6b7280; font-size: 14px;">Keep it up — every payment counts.</p>
+      <a href="https://budget.dvdtiago.com" style="display: inline-block; margin-top: 16px; padding: 10px 20px; background-color: #4f46e5; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600;">Open Budgetarian →</a>
     </div>
   `;
 
